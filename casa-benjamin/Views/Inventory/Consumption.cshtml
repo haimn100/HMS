@@ -1,0 +1,41 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">
+        Menu Items Consumptions
+    </h1>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <div class="table-responsive">
+                        <table id="productsTable" class="table no-select"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+        window.dtOptions = [
+            {
+                el: 'productsTable',
+                ajax: {
+                    read: '/product/consumptiontable',
+                    update: '/product/consumptionupdate'
+                },
+                serverSide: false,
+                order:  [[3, "desc"]],
+                columns: [
+                    { data: 'id', title: 'Id', visible: false, edit:'readonly' },
+                    { data: 'name', title: 'Menu Item', edit:'readonly' },
+                    { data: 'cat_id', title: 'Category', edit:'readonly', list: { url: '/kitchen/categories'} },
+                    { data: 'consumption', title: 'Consumption Visitor/Day', type: 'number'}
+                ]
+            }
+        ];
+</script>

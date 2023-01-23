@@ -1,0 +1,102 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var roomBeds = UserManager.Instance.GetRoomBeds();
+}
+
+<div class="row clearfix">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+            <div class="header">
+                <h2>
+                    @I18n.T("Beds")
+                </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover js-responsive-table dataTable" cellspacing="0" >
+                        <thead>
+                            <tr>
+                                <th data-order="asc">@I18n.T("Number")</th>
+                                <th>@I18n.T("Type")</th>
+                                <th>@I18n.T("Room")</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                foreach (var member in UserManager.Instance.GetBeds())
+                                {
+                                    <tr>
+                                        <td>@member.id</td>
+                                        <td>@member.bed_type_id.ToString()</td>
+                                        @{  
+                                            RoomBed room = roomBeds.FirstOrDefault(x => x.bed_id == member.id);
+                                            int t = (int)member.bed_type_id;
+                                            }
+                                        <td>
+                                            @if(room != null)
+                                            {
+                                                <text>@room.room_id</text>
+                                            }
+                                            else {
+                                                <text>-</text>
+                                            }
+                                        </td>
+                                        <td><a href="javascript::void();" onclick="editCategory('@member.id','@member.id', '@t');">@I18n.T("Edit")</a></td>
+                                    </tr>
+                                            }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="categoryEdit" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Edit")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/admin/bededit" method="post">
+                            <div class="row clearfix">
+                                          
+                                <input type="hidden" name="id">
+                                <input type="hidden" name="number">
+             
+                                    <div class="form-group">
+                                        <div class="form-line">
+                                            <select name="bed_type_id">
+                                                <option value="1">@I18n.T("Single")</option>
+                                                <option value="2">@I18n.T("Double")</option>
+                                                <option value="3">@I18n.T("Bunk Bed")</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                               
+                                <div class="row">
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE")</button>
+                                        <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE")</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function editCategory(id,number, type) {
+        $("#categoryEdit input[name='id']").val(id);
+        $("#categoryEdit input[name='number']").val(number);
+        $("#categoryEdit select[name='bed_type_id']").val(type);
+
+        $("#categoryEdit").modal();
+    }
+</script>

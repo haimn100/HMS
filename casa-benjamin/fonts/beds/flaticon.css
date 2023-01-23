@@ -1,0 +1,80 @@
+	/*
+  	Flaticon icon font: Flaticon
+  	Creation date: 22/06/2016 15:16
+  	*/
+
+@font-face {
+  font-family: "Flaticon";
+  src: url("/fonts/beds/Flaticon.eot");
+  src: url("/fonts/beds/Flaticon.eot?#iefix") format("embedded-opentype"),
+       url("/fonts/beds/Flaticon.woff") format("woff"),
+       url("/fonts/beds/Flaticon.ttf") format("truetype"),
+       url("/fonts/beds/Flaticon.svg#Flaticon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: "Flaticon";
+    src: url("./Flaticon.svg#Flaticon") format("svg");
+  }
+}
+
+[class^="flaticon-"]:before, [class*=" flaticon-"]:before,
+[class^="flaticon-"]:after, [class*=" flaticon-"]:after {   
+  font-family: Flaticon;
+        font-size: inherit;
+font-style: normal;
+}
+
+.flaticon-bed-for-two:before { content: "\f100"; }
+.flaticon-bed-left-side:before { content: "\f101"; }
+.flaticon-bed-mattress:before { content: "\f102"; }
+.flaticon-bed-with-wheels:before { content: "\f103"; }
+.flaticon-bedroom-bed:before { content: "\f104"; }
+.flaticon-berth:before { content: "\f105"; }
+.flaticon-berth-with-stairs:before { content: "\f106"; }
+.flaticon-big-bed-hotel:before { content: "\f107"; }
+.flaticon-big-bed-with-long-pillow:before { content: "\f108"; }
+.flaticon-big-bed-with-one-pillow:before { content: "\f109"; }
+.flaticon-big-bed-with-one-pillow-1:before { content: "\f10a"; }
+.flaticon-big-bed-with-pillows:before { content: "\f10b"; }
+.flaticon-big-double-bed:before { content: "\f10c"; }
+.flaticon-big-mattress:before { content: "\f10d"; }
+.flaticon-child-bed:before { content: "\f10e"; }
+.flaticon-circular-bed-with-heart:before { content: "\f10f"; }
+.flaticon-couple-double-bed:before { content: "\f110"; }
+.flaticon-cradle:before { content: "\f111"; }
+.flaticon-dark-chair:before { content: "\f112"; }
+.flaticon-double-bed:before { content: "\f113"; }
+.flaticon-double-bed-with-curtains:before { content: "\f114"; }
+.flaticon-double-bed-with-pillow:before { content: "\f115"; }
+.flaticon-double-bed-with-striped-headboard:before { content: "\f116"; }
+.flaticon-double-bed-with-two-pillows:before { content: "\f117"; }
+.flaticon-heart-shaped-double-bed:before { content: "\f118"; }
+.flaticon-hostel-big-bed:before { content: "\f119"; }
+.flaticon-hostel-double-bed:before { content: "\f11a"; }
+.flaticon-hostel-double-bed-with-two-pillows:before { content: "\f11b"; }
+.flaticon-hostel-king-size-bed:before { content: "\f11c"; }
+.flaticon-hotel-bed-pillow:before { content: "\f11d"; }
+.flaticon-hotel-bedroom:before { content: "\f11e"; }
+.flaticon-hotel-bedroom-1:before { content: "\f11f"; }
+.flaticon-hotel-bedside:before { content: "\f120"; }
+.flaticon-hotel-double-bed:before { content: "\f121"; }
+.flaticon-hotel-double-bed-with-two-pillows:before { content: "\f122"; }
+.flaticon-hotel-king-size-bed:before { content: "\f123"; }
+.flaticon-hotel-king-size-bed-1:before { content: "\f124"; }
+.flaticon-hotel-left-side-bed:before { content: "\f125"; }
+.flaticon-king-size-bed-for-one-person:before { content: "\f126"; }
+.flaticon-king-size-bed-with-one-pillow:before { content: "\f127"; }
+.flaticon-king-size-bed-with-pillows:before { content: "\f128"; }
+.flaticon-king-size-bed-with-two-pillows:before { content: "\f129"; }
+.flaticon-kings-size-bed-for-three:before { content: "\f12a"; }
+.flaticon-large-double-bed:before { content: "\f12b"; }
+.flaticon-modern-double-bed:before { content: "\f12c"; }
+.flaticon-room-bed:before { content: "\f12d"; }
+.flaticon-sleeping-bed:before { content: "\f12e"; }
+.flaticon-sofa-bed:before { content: "\f12f"; }
+.flaticon-stretcher:before { content: "\f130"; }
+.flaticon-tatami-bed:before { content: "\f131"; }

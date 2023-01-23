@@ -1,0 +1,181 @@
+﻿@model List<UIIncome>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    DateTime _date = ViewBag.Date;
+    List<IncomeLog> LogTable = (List<IncomeLog>)ViewBag.LogTable;
+
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">@I18n.T("ADD INCOMES")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT OF")
+            <input type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@_date.ToShortUIMonthlyDateString()" />
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <button data-toggle="modal" data-target="#addIncomeModal" type="button" class="btn btn-success btn-circle-lg waves-effect waves-circle waves-float pull-right">
+                <i class="material-icons">add_circle</i>
+            </button>
+            <button onclick="remove()" type="button" class="btn btn-danger btn-circle-lg waves-effect waves-circle waves-float pull-right">
+                <i class="material-icons">clear</i>
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="body">
+                    <table id="incomesTable" class="table dataTable" data-page-size="20">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Comment</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.id</td>
+                                    <td>@item.date.ToShortUIDateTimeString()</td>
+                                    <td>@item.name</td>
+                                    <td>@item.type</td>
+                                    <td>@item.comment</td>
+                                    <td>@item.val.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="header">
+                    Log
+                </div>
+                <div class="body">
+                    <table id="logTable" class="table dataTable" data-page-size="20">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Staff</th>
+                                <th>Expense</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in LogTable)
+                            {
+                                <tr>
+                                    <td>@item.action_type.ToString()</td>
+                                    <td>@item.staff_name</td>
+                                    <td>@item.income_name</td>
+                                    <td>@item.income_val.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    function remove() {
+
+      
+
+        var table = $('#incomesTable').DataTable();
+        if (table.row('.selected').length === 0) {
+            alertify.alert("Select a row");
+            return;
+        }
+        if (!confirm("Are you sure?")) return;
+
+        var row = table.row('.selected');
+        var id = row.data()[0];
+
+        $.get("/reports/DeleteIncome?id= " + id);
+
+        row.remove().draw(false);
+    }
+     
+    $(".dateMonthPicker").change(function () {
+        var d = $(this).val();
+        window.location = "/reports/addincomes?date=" + d;
+    });
+
+</script>
+
+<div class="modal" id="addIncomeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Add Income")</h4>
+            </div>
+            <div class="modal-body">
+                <form action="/reports/addincome" method="post">
+                    <input type="hidden" name="returnurl" value="@Request.Url.AbsoluteUri" />
+                    <input type="hidden" name="reportmonth" value="@_date.Month" />
+                    <input type="hidden" name="reportyear" value="@_date.Year" />
+                    <div class="row clearfix">
+                        <div class="col-lg-12">
+                            <table class="info-table">
+                                <tr>
+                                    <td width="60%">
+                                        <div class="form-group">
+                                            <label>@I18n.T("Category")</label>
+                                            <div class="form-line">
+                                                <select name="category" required class="form-control select2">
+                                                    @foreach (var item in ReportsManager.Instance.GetIncomeCategories(true))
+                    {
+                                <option value="@item.id">@item.name</option>
+}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Income")</label>
+                                            <div class="form-line">
+                                                <input type="number" name="income" min="0" value="0" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Comment")</label>
+                                            <div class="form-line">
+                                                <input type="text" name="comment" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE").ToUpper()</button>
+                            <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE").ToUpper()</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

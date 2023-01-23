@@ -1,0 +1,156 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row clearfix">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+            <div class="header">
+                <h2>
+                    @I18n.T("Categories")
+                </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" cellspacing="0" width="100%">
+                        <thead>
+                            <tr>       
+                                <th>@I18n.T("Name")</th>
+                                <th>@I18n.T("Number")</th>
+                                <th>@I18n.T("Type")</th>
+                                <th>@I18n.T("Active")</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ 
+                                var cats = casa_benjamin.Modules.Shared.Services.CacheManager.Instance.MenuCategories;
+                                foreach (var member in casa_benjamin.Modules.Shared.Services.CacheManager.Instance.MenuCategories)
+                                {
+                                <tr>
+                                    <td><a href="/menu/items?cat=@member.category.id">@member.category.name</a></td>
+                                    <td>@member.category.number</td>
+                                    <td>@member.category.menu_category_type.ToString()</td>
+                                    <td>@member.category.is_active</td>
+                                    <td><a href="javascript::void();" onclick="editCategory('@member.category.id','@member.category.name','@member.category.number',@member.category.is_active.ToString().ToLower());">@I18n.T("Edit")</a></td>
+                                </tr>
+                                    }
+                                }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <button data-toggle="modal" data-target="#categoryAdd" type="button" class="btn btn-danger btn-circle-lg waves-effect waves-circle waves-float pull-right">
+                        <i class="material-icons">add_circle</i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="categoryEdit" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Edit Category")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/admin/categoriesedit" method="post">
+                            <div class="row clearfix">
+                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <div class="form-line">
+                                            <input type="text" name="name" class="form-control" placeholder="@I18n.T("Name")">
+                                            <input type="hidden" name="id">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+                                    <div class="form-group">
+                                        <div class="form-line">
+                                            <input type="text" name="number" class="form-control" placeholder="@I18n.T("Number")">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                    <div class="form-group">
+                                        <label style="float:left;" for="is_active">@I18n.T("Active")</label>
+                                        <div class="switch">
+                                            <label><input value="true" name="is_active" type="checkbox"><span class="lever is_active"></span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE")</button>
+                                    <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE")</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="categoryAdd" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Add Category")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/admin/CategoriesAdd" method="post">
+                            <div class="row clearfix">
+                                <div class="col-lg-4 col-xs-12">
+                                    <div class="form-group">
+                                        <div class="form-line">
+                                            <input type="text" name="name" class="form-control" placeholder="@I18n.T("Name")">
+                                        </div>
+                                    </div>
+                                </div>                              
+                                <div class="col-lg-3 col-xs-12">
+                                    <div class="form-group">
+                                        <div class="form-line">
+                                            @{ 
+                                                int lastIndex = cats.Count == 0 ? 1 : (cats.Last().category.number + 1);
+                                            }
+                                            <input type="text" name="number" class="form-control" placeholder="@I18n.T("Number")" value="@lastIndex" />
+                                            <input type="hidden" name="is_active" value="true" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-xs-12">
+                                    <div class="form-group">
+                                        <div class="form-line">
+                                            <select name="menu_category_type" class="form-control">
+                                                <option value="1">@I18n.T("Kitchen")</option>
+                                                <option value="2">@I18n.T("Services")</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE")</button>
+                                    <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE")</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editCategory(id, name, number, isActive) {
+        $("#categoryEdit input[name='id']").val(id);
+        $("#categoryEdit input[name='name']").val(name);
+        $("#categoryEdit input[name='number']").val(number);
+        $("#categoryEdit input[name='is_active']").prop('checked', isActive);
+
+        $("#categoryEdit").modal();
+    }
+</script>

@@ -1,0 +1,74 @@
+﻿@model List<UserPrePay>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+    int ghostUserId = CacheManager.Instance.GhostUser.id;
+}
+
+<script src="~/js/highchart-3d.js"></script>
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("Deposits MONTHLY REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT OF")
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card clearfix">
+                <div class="body dataTable-no-header">
+                    <table class="table table-small dataTable" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Id")</th>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Guest")</th>
+                                <th>@I18n.T("Payment Type")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th>@I18n.T("Amount")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                            <tr>
+                                <td>@item.id</td>
+                                <td>@item.prepay_date.ToShortUIDateTimeString()</td>
+                                <td>
+                                    <a target="_blank" href="/guest/bill?userid=@item.user_id">@item.user_id</a>
+                                </td>
+                                <td>@item.pay_type.ToString()</td>
+                                <td>@item.staff</td>
+                                <td>@item.comment</td>
+                                <td>$@item.amount.ToString("N0")</td>
+                            </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6"></td>
+                                <td align="left" style="font-weight:bold;">@I18n.T("Total"): $@Model.Sum(x=>x.amount).ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+
+    $("#updateReport").click(function () {
+        var from = $("#fromDate").val();
+        var to = $("#toDate").val();
+        window.location = "/reports/MonthlyDeposit?from=" + from + "&to=" + to;
+    });
+
+</script>

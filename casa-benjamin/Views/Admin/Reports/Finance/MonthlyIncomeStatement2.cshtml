@@ -1,0 +1,542 @@
+﻿@model List<DailyIncomeStatment>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+    string checkOutUrl = (dateQuery.Monthly ? "/reports/monthlycheckouts" : "/reports/checkouts") + Request.Url.Query;
+    string kitchenOrdersUrl = (dateQuery.Monthly ? "/reports/monthlyorders" : "/reports/dailyorders") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1" : Request.Url.Query);
+    string servicesOrdersUrl = (dateQuery.Monthly ? "/reports/monthlyserviceorders" : "/reports/dailyserviceorders") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1" : Request.Url.Query);
+    var expensesCategories = ReportsManager.Instance.GetExpenseCategories();
+    var incomesCategories = ReportsManager.Instance.GetIncomeCategories();
+
+
+
+    var allExpenses = Model.SelectMany(x => x.ExpensesReport.List);
+
+
+    var expenseCategories = ReportsManager.Instance.GetExpenseCategories();
+    var currentExpensesCategories = expenseCategories.Where(x => x.expense_category_type == ExpenseCategoryType.Current).Select(x => x.id).ToList();
+    var kitchenExpensesCategories = expenseCategories.Where(x => x.expense_category_type == ExpenseCategoryType.Kitchen).Select(x => x.id).ToList();
+    var cleaningExpensesCategories = expenseCategories.Where(x => x.expense_category_type == ExpenseCategoryType.Cleaning).Select(x => x.id).ToList();
+    var clubExpensesCategories = expenseCategories.Where(x => x.expense_category_type == ExpenseCategoryType.Club).Select(x => x.id).ToList();
+    var toursExpensesCategories = expenseCategories.Where(x => x.expense_category_type == ExpenseCategoryType.Tours).Select(x => x.id).ToList();
+    var otherExpensesCategories = expenseCategories.Where(x => x.expense_category_type == ExpenseCategoryType.Other).Select(x => x.id).ToList();
+
+
+    var a = allExpenses.Where(x =>  !otherExpensesCategories.Contains(x.expense_category_id)
+                                 && !currentExpensesCategories.Contains(x.expense_category_id)
+                                 && !kitchenExpensesCategories.Contains(x.expense_category_id)
+                                 && !cleaningExpensesCategories.Contains(x.expense_category_id)
+                                 && !clubExpensesCategories.Contains(x.expense_category_id)
+                                 && !toursExpensesCategories.Contains(x.expense_category_id));
+
+    var futureBills = ReportsManager.Instance.GetFutureRevenue();
+    double? _residentCost = ReportsManager.Instance.GetResidentCost(dateQuery.FromOrDefault());
+    double  residentCost = _residentCost.HasValue ? _residentCost.Value: 0;
+
+    var totalFurtureCuentaKitchen = futureBills.Sum(x => x.KitchenTotal);
+    var totalFurtureCuentaServices = futureBills.Sum(x => x.ServicesTotal);
+    var totalFutureCuentaAccomodation = futureBills.Sum(x => x.RoomTotal);
+    var totalFutureCuentaDiscount = futureBills.Sum(x => x.DiscountTotal);
+    var totalFuture = totalFurtureCuentaKitchen + totalFurtureCuentaServices + totalFutureCuentaAccomodation - totalFutureCuentaDiscount - residentCost;
+
+
+}
+
+<style>
+    .card .body{
+        min-height: 216px;
+    }
+
+    tr.underline {
+        border-bottom: 1px solid #808080;
+    }
+
+    .total {
+        text-decoration: none !important;
+    }
+
+        .total * {
+            text-decoration: none !important;
+        }
+
+    .tdSpace {
+        padding-bottom:20px;
+    }
+
+    .right{
+        text-align:right;
+    }
+
+    table{
+        width:100%;
+    }
+
+   td.money-color{
+       text-align:right;
+   }
+
+</style>
+
+<div class="container-fluid report-screen tight-print" ng-controller="IncomeStat">
+    <h1 class="reports-title">
+        @I18n.T("Income Statement")
+    </h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT")
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-3">
+            <div class="card">
+                <div class="header">
+                    <h2>
+                        <a class="no-print" href="@checkOutUrl">@I18n.T("CheckOuts") (@Model.Sum(x => x.CheckOutsReport.TotalPeople))</a>
+                        <span class="print">@I18n.T("CheckOuts") (@Model.Sum(x => x.CheckOutsReport.TotalPeople) People)</span>
+                    </h2>
+                </div>
+                <div class="body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <table class="simple-list">
+                                @{
+                                    var accom = Model.Sum(x => x.CheckOutsReport.TotalAccomodation);
+                                    var kitchen = Model.Sum(x => x.CheckOutsReport.TotalKitchen);
+                                    var services = Model.Sum(x => x.CheckOutsReport.TotalServices);
+                                    var discounts = Model.Sum(x => x.CheckOutsReport.TotalDiscount);
+                                    var creditCardCharge = Model.Sum(x => x.CheckOutsReport.TotalCreditChargeAmount);
+                                }
+                                <tbody>
+                                    <tr>
+                                        <td>Accomodation:</td>
+                                        <td class="money-color">$@accom.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kitchen:</td>
+                                        <td class="money-color">$@kitchen.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Services:</td>
+                                        <td class="money-color">$@services.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>CreditCard Extra Charge:</td>
+                                        <td class="money-color">$@creditCardCharge.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="underline">
+                                        <td>Discounts:</td>
+                                        <td class="expense-color" align="right">-$@discounts.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+                                        <td>@I18n.T("Total"):</td>
+                                        @{ var checkoutsTotal = accom + kitchen + services - discounts + creditCardCharge;}
+                                        <td class="money-color">$@checkoutsTotal.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3">
+            <div class="card">
+                <div class="header">
+                    <h2>@I18n.T("Kitchen")</h2>
+                </div>
+                <div class="body">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <table class="simple-list" style="width:100%">
+                                <tbody>
+                                    <tr>
+                                        <td>@I18n.T("Cash"):</td>
+                                        <td class="money-color right">$@Model.Sum(x => x.CashOrdersReport.Kitchen).ToString("N0")</td>
+                                    </tr>
+                                    <tr class="underline">
+                                        <td>@I18n.T("Credit"):</td>
+                                        <td class="money-color right">$@Model.Sum(x => x.CreditOrdersReport.Kitchen).ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+                                        <td>@I18n.T("Total"):</td>
+                                        @{
+                                            var kitchenTotal = Model.Sum(x => x.CashOrdersReport.Kitchen) + Model.Sum(x => x.CreditOrdersReport.Kitchen);
+                                        }
+                                        <td class="money-color right">$@kitchenTotal.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br />
+                            <table class="simple-list" style="width:100%">
+                                <tr>
+                                    <td></td>
+                                    <td class="money-color right">$@kitchenTotal.ToString("N0")</td>
+                                </tr>
+                                <tr class="underline">
+                                    <td>+ @I18n.T("Checkouts"):</td>
+                                    <td class="money-color right">$@kitchen.ToString("N0")</td>
+                                </tr>
+
+                                <tr class="total">
+                                    <td>@I18n.T("Total"):</td>
+                                    @{
+                                        var kitchenTotalWithcheckouts = Model.Sum(x => x.CashOrdersReport.Kitchen) + Model.Sum(x => x.CreditOrdersReport.Kitchen) + kitchen;
+                                    }
+                                    <td class="money-color right">$@kitchenTotalWithcheckouts.ToString("N0")</td>
+                                </tr>
+                            </table>
+                            @{
+                                var kitchenExpenses = allExpenses.Where(x => kitchenExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val);
+                            }
+                            <br />
+                            <table class="simple-list" style="width:100%">
+                                <tr>
+                                    <td></td>
+                                    <td class="money-color right">$@kitchenTotalWithcheckouts.ToString("N0")</td>
+                                </tr>
+                                <tr class="underline">
+                                    <td>- @I18n.T("Expenses"):</td>
+                                    <td class="expense-color right">$@kitchenExpenses.ToString("N0")</td>
+                                </tr>
+
+                                <tr class="total">
+                                    <td>@I18n.T("Total"):</td>
+                                    @{
+                                        var kitchenTotalWithcheckoutsAndExpenses = (double)kitchenTotalWithcheckouts - kitchenExpenses;
+                                    }
+                                    <td class="money-color right">$@kitchenTotalWithcheckoutsAndExpenses.ToString("N0")</td>
+                                </tr>
+                            </table>
+                            <br />
+                            <table class="simple-list" style="width:100%">
+                                <tr>
+                                    <td></td>
+                                    <td class="money-color right">$@kitchenTotalWithcheckouts.ToString("N0")</td>
+                                </tr>
+                                <tr class="underline">
+                                    <td>+ @I18n.T("Cuenta"):</td>
+                                    <td class="money-color right">$@totalFurtureCuentaKitchen.ToString("N0")</td>
+                                </tr>
+
+                                <tr class="total">
+                                    <td>@I18n.T("Total"):</td>
+                                    @{
+                                        var kitchenTotalWithcheckoutsAndCuenta = Model.Sum(x => x.CashOrdersReport.Kitchen) + Model.Sum(x => x.CreditOrdersReport.Kitchen) + kitchen + (decimal)totalFurtureCuentaKitchen;
+                                    }
+                                    <td class="money-color right">$@kitchenTotalWithcheckoutsAndCuenta.ToString("N0")</td>
+                                </tr>
+                            </table>
+                            <br />
+                            <table class="simple-list" style="width:100%">
+
+                                <tr>
+                                    <td></td>
+                                    <td class="money-color right">$@kitchenTotalWithcheckoutsAndCuenta.ToString("N0")</td>
+                                </tr>
+                                <tr class="underline">
+                                    <td>- @I18n.T("Expenses"):</td>
+                                    <td class="expense-color right">$@kitchenExpenses.ToString("N0")</td>
+                                </tr>
+
+                                <tr class="total">
+                                    <td>@I18n.T("Total"):</td>
+                                    @{
+                                        var kitchenTotalWithcheckoutsAndCuentaAndExpenses = kitchenTotalWithcheckoutsAndCuenta - (decimal)kitchenExpenses;
+                                    }
+                                    <td class="money-color right">$@kitchenTotalWithcheckoutsAndCuentaAndExpenses.ToString("N0")</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3">
+            <div class="card">
+                <div class="header">
+                    <h2>@I18n.T("Other")</h2>
+                </div>
+                <div class="body">
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <table class="simple-list">
+                                <tbody>
+                                    <tr>
+                                        <td>@I18n.T("Services"):</td>
+                                        @{
+                                            var servicesTotal = Model.Sum(x => x.CashOrdersReport.Services) + Model.Sum(x => x.CreditOrdersReport.Services);
+                                        }
+                                        <td class="money-color">$@servicesTotal.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="underline">
+                                        <td>@I18n.T("Others"):</td>
+                                        <td class="money-color">$@Model.Sum(x => x.IncomesReport.Total).ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+                                        <td>@I18n.T("Total"):</td>
+                                        @{
+                                            var othersTotal = servicesTotal + Model.Sum(x => x.IncomesReport.Total);
+                                        }
+                                        <td class="money-color">$@othersTotal.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br />
+                            <table class="simple-list">
+                                <tbody>
+                                    <tr class="underline">
+                                        <td>+@I18n.T("Service (Checkouts)"):</td>
+                                        <td class="money-color">$@services.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+                                        <td>@I18n.T("Total"):</td>
+                                        @{
+                                            var othersTotalWithCO = servicesTotal + Model.Sum(x => x.IncomesReport.Total) + services;
+                                        }
+                                        <td class="money-color" align="right">$@othersTotalWithCO.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-3">
+            <div class="card">
+                <div class="header">
+                    <h2>@I18n.T("Summary")</h2>
+                </div>
+                <div class="body">
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <table class="simple-list">
+                                <tbody>
+                                    <tr>
+                                        <td>@I18n.T("Checkouts"):</td>
+                                        <td class="money-color">$@checkoutsTotal.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>@I18n.T("Kitchen"):</td>
+                                        <td class="money-color">$@kitchenTotal.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="underline">
+                                        <td>@I18n.T("Other"):</td>
+                                        <td class="money-color">$@othersTotal.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+                                        <td>@I18n.T("Total"):</td>
+                                        @{
+                                            var incomeTotal = checkoutsTotal + kitchenTotal + othersTotal;
+                                        }
+                                        <td class="money-color">$@incomeTotal.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br />
+
+                            <table class="simple-list">
+                                <tbody>
+                                    <tr class="underline">
+                                        <td>@I18n.T("Expenses"):</td>
+                                        @{
+                                            var totalExpenses = Model.Sum(x => x.ExpensesReport.Total);
+                                        }
+                                        <td class="expense-color" align="right">-$@totalExpenses.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+                                        <td>@I18n.T("Total"):</td>
+                                        @{
+                                            var incomeTotalWithExpenses = incomeTotal - totalExpenses;
+                                        }
+                                        <td class="money-color">$@incomeTotalWithExpenses.ToString("N0")</td>
+                                    </tr>
+                            </table>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>        
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-3">
+            <div class="card">
+                <div class="header">
+                    <h2>
+                        <span>Unpaid Revenue</span>
+                    </h2>
+                </div>
+                <div class="body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <table class="simple-list">
+                                <tbody>
+                                    <tr>
+                                        <td>Accomodation:</td>
+                                        <td class="money-color">$@totalFutureCuentaAccomodation.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Kitchen:</td>
+                                        <td class="money-color">$@totalFurtureCuentaKitchen.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Services:</td>
+                                        <td class="money-color">$@totalFurtureCuentaServices.ToString("N0")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Residents:</td>
+                                        <td class="expense-color" align="right">-$@residentCost.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="underline">
+                                        <td>Discount:</td>
+                                        <td class="expense-color" align="right">-$@totalFutureCuentaDiscount.ToString("N0")</td>
+                                    </tr>
+                                    <tr class="total">
+
+                                        <td>@I18n.T("Total"):</td>
+                                        <td class="money-color">$@totalFuture.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-12">
+            <div class="card">
+                <div class="header">
+                    <h2>@I18n.T("Expenses")</h2>
+                </div>
+                <div class="body">
+                    <table class="table table-small m-no-edges">
+                        <tbody>
+                            <tr>
+                                <td><a href="/reports/monthlyexpense?expenseCategoryId=@((int)ExpenseCategoryType.Current)&@(Request.Url.Query.Length > 0 ? Request.Url.Query.Substring(1) : "")">Current</a></td>
+                                <td class="expense-color">$@allExpenses.Where(x => currentExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val).ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <td><a href="/reports/monthlyexpense?expenseCategoryId=@((int)ExpenseCategoryType.Kitchen)&@(Request.Url.Query.Length > 0 ? Request.Url.Query.Substring(1): "")">Kitchen</a></td>
+                                <td class="expense-color">$@allExpenses.Where(x => kitchenExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val).ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <td><a href="/reports/monthlyexpense?expenseCategoryId=@((int)ExpenseCategoryType.Cleaning)&@(Request.Url.Query.Length > 0 ? Request.Url.Query.Substring(1): "")">Cleaning</a></td>
+                                <td class="expense-color">$@allExpenses.Where(x => cleaningExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val).ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <td><a href="/reports/monthlyexpense?expenseCategoryId=@((int)ExpenseCategoryType.Club)&@(Request.Url.Query.Length > 0 ? Request.Url.Query.Substring(1) : "")">Club</a></td>
+                                <td class="expense-color">$@allExpenses.Where(x => clubExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val).ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <td><a href="/reports/monthlyexpense?expenseCategoryId=@((int)ExpenseCategoryType.Tours)&@(Request.Url.Query.Length > 0 ? Request.Url.Query.Substring(1) :"")">Tours</a></td>
+                                <td class="expense-color">$@allExpenses.Where(x => toursExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val).ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <td><a href="/reports/monthlyexpense?expenseCategoryId=@((int)ExpenseCategoryType.Other)&@(Request.Url.Query.Length > 0 ? Request.Url.Query.Substring(1) : "")">Other</a></td>
+                                <td class="expense-color">$@allExpenses.Where(x => otherExpensesCategories.Contains(x.expense_category_id)).Sum(x => x.expense_val).ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <b>Total</b>
+                                </td>
+                                <td class="expense-color">
+                                    <b>$@allExpenses.Sum(x => x.expense_val).ToString("N0")</b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 col-xs-12">
+            <div class="card" style="min-height:380px;">
+                <div class="header">
+                    <h2>@I18n.T("Nationalities") (From Checkings This Month)</h2>
+                </div>
+                <div class="body">
+
+                    <table id="servicesTable" class="table table-small dataTable">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Nationality")</th>
+                                <th>@I18n.T("Count")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in demographics">
+                                <td>{{item.nationality | country}}</td>
+                                <td>{{item.cnt}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>    
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#updateReport").click(function () {
+            var from = $("#fromDate").val();
+            window.location = "/reports/monthlyincomestatement2?from=" + from;
+        });
+
+    });
+
+    myApp.filter('country', function () {
+        return function (input) {
+            input = input || '';
+            var out = '';
+            var countries = MyHostel.i18n.getCountriesAndCitiesList({ useSelect2Format: true });
+
+            for (var i = 0; i < countries.length; i++) {
+                if (countries[i].id == input) {
+                    return countries[i].text;
+                }
+            }
+
+            return input;
+        };
+    });
+
+     @{ 
+         DateTime date = dateQuery.FromOrDefault();
+         date = new DateTime(date.Year, date.Month, 1);
+         var start = date;
+         var end = date.AddMonths(1).AddDays(-1);
+
+
+         List<DemographicsCount> demo = new casa_benjamin.Modules.Shared.Repositories.GenericRepository().Get<DemographicsCount>(string.Format("SELECT count(*) cnt, nationality FROM `user` where date(cidate) between '{0}' and '{1}' and is_hidden is null group by nationality", start.ToMySqlDateString(), end.ToMySqlDateString())).ToList().OrderByDescending(x=>x.cnt).ToList();
+
+    }
+
+    myApp.controller('IncomeStat', function ($scope, $timeout, $http) {
+     
+        $scope.demographics = @Html.Raw(Json.Encode(demo));
+    });
+
+   
+
+
+
+
+</script>

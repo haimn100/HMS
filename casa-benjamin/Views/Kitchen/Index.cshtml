@@ -1,0 +1,430 @@
+﻿@section PageScripts{
+    <script src="/js/pages/kitchen.js?v=9"></script>
+}
+@{ 
+    string redirectTo = Request.Url.PathAndQuery;
+	Staff user = (Staff)Session["user"];
+}
+<style>
+    @@media print {
+        body{
+            margin:0 !important;
+        }
+    }
+</style>
+
+<input id="userId" type="hidden" value="@ViewBag.UserId" />
+
+<input type="hidden" onload="this.focus()" value="" />
+<div class="kitchen-container" ng-cloak>
+        <div ng-controller="KitchenController">
+            <div class="no-print">
+                <div class="row main-menu">
+                    <div class="col-lg-5">
+                        <div class="kitchen-cashier">
+                            <div class="row" ng-if="!kitchen.user.isCash">
+                                <div class="col-lg-12">
+                                    <img class="order-user-pic lightense" ng-src="/guestimages/{{kitchen.user.pic}}"/>
+                                    <div class="order-user-info">
+                                        <table class="order-user-info-table">
+                                            <tbody>
+                                                <tr>
+                                                    <td><b>@I18n.T("Name"):</b> {{kitchen.user.name}} {{kitchen.user.last_name}}</td>
+                                                    <td><b>@I18n.T("Bed"):</b> {{kitchen.user.bed_id}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>@I18n.T("Passport"):</b> {{kitchen.user.passport}}</td>
+                                                    <td><b>@I18n.T("Checked In By"):</b> {{kitchen.user.checked_in_by}}</td>
+                                                </tr>
+                                                <tr ng-if="kitchen.user.barcode != null">
+                                                    <td colspan="2" style="background-color:yellow;">
+                                                        <b>@I18n.T("Barcode"):</b> {{kitchen.user.barcode}}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="4">
+                                                        <a href="/guest/bill?userid={{kitchen.user.id}}&redirectto=@redirectTo" class="btn btn-xs waves-effect">@I18n.T("Bill")</a>
+                                                        <a href="/kitchen/guestorders?userid={{kitchen.user.id}}&redirectto=@redirectTo" class="btn btn-xs waves-effect">@I18n.T("Orders")</a>
+                                                        <a href="/guest/userprofile?userid={{kitchen.user.id}}&redirectto=@redirectTo" class="btn btn-xs waves-effect">@I18n.T("Profile")</a>
+                                                        <div id="changeBedDropDown" class="dropdown pull-left" style="margin-right:5px;">
+                                                            <a href="javascript::void();" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-xs waves-effect waves-float">
+                                                                @I18n.T("Change Bed")
+                                                            </a>
+                                                            <ul class="other-item-menu dropdown-menu noclose" aria-labelledby="dLabel">
+                                                                <li>
+                                                                    <form id="moveBedForm" action="/guest/moveuserbed" method="post">
+                                                                        <label>@I18n.T("Move {{kitchen.user.name}} from Bed {{kitchen.user.bed_id}} To")</label>
+                                                                        <input type="hidden" name="userId" value="{{kitchen.user.id}}" />
+                                                                        <input type="number" required name="destBed" min="1" max="500" class="form-control" placeholder="@I18n.T("Bed Number")" />
+                                                                        <input type="number" required name="destPrice" min="1" class="form-control" placeholder="@I18n.T("Price")" />
+                                                                        <input type="text" name="comment" class="form-control" placeholder="@I18n.T("Comment")" />
+                                                                        <select required name="staffId" class="select2" placeholder="@I18n.T("Employee")">
+                                                                            <option></option>
+                                                                            @foreach (var item in UserManager.Instance.GetStaff(true))
+                                                                            {
+                                                                                <option value="@item.id">@item.name</option>
+                                                                            }
+                                                                        </select>
+                                                                        <button class="btn" style="margin-top:10px;" type="submit">@I18n.T("Save")</button>
+                                                                    </form>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+
+                                <div class="col-lg-12 order-actions-pane">
+                                    <div class="seperator"></div>
+                                    <div>
+                                        <div class="row">                                           
+                                            <div class="col-lg-12">
+                                                <div class="order-pay-type pull-left-rmargin" role="group" aria-label="Justified button group">
+                                                    <input type="radio" ng-model="order.pay_type_id" name="pay-type" id="credit" value="2" class="with-gap radio-col-red" />
+                                                    <label for="credit">@I18n.T("Credit")</label>
+                                                    <input type="radio" ng-model="order.pay_type_id" name="pay-type" id="cash" value="3" class="with-gap radio-col-red" />
+                                                    <label for="cash">@I18n.T("Cash")</label>
+                                                    <input type="radio" ng-disabled="kitchen.user.isCash" ng-checked="!kitchen.user.isCash" name="pay-type" id="tab" value="1" class="with-gap radio-col-red" />
+                                                    <label for="tab">@I18n.T("Cuenta")</label>
+                                                </div>
+                                                <div class="pull-left" style="width:120px;">
+                                                    <select name="employee" class="select2" placeholder="@I18n.T("Employee")">
+                                                        <option></option>
+                                                        @foreach (var item in UserManager.Instance.GetStaff(true))
+                                                        {
+                                                            <option value="@item.id">@item.name</option>
+                                                        }
+                                                    </select>
+                                                </div>  
+                                                <div class="pull-right">
+                                                    <small>@I18n.T("Total"):</small>
+                                                    <span class="order-total">${{order.total}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" style="margin-top:8px;">
+                                            <div class="col-lg-12">
+                                                <div class="clearfix">
+                                                    <div class="pull-left">
+                                                        <div class="dropup pull-left">
+                                                            <div class="dropdown">
+                                                                <button type="button" ng-click="focusOn('otherItemComment')" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-default waves-effect waves-float cashier-btn">
+                                                                    <i class="material-icons">playlist_add</i><br />
+                                                                    @I18n.T("Other")
+                                                                </button>
+                                                                <ul class="other-item-menu dropdown-menu noclose" aria-labelledby="dLabel">
+                                                                    <li>
+                                                                        <input type="text" tabindex="1" id="otherItemComment" class="form-control" placeholder="Comment" />
+                                                                        <input type="number" min="0" oninput="this.value = Math.abs(this.value)" id="otherItemPrice" class="form-control" placeholder="@I18n.T("Price")" />
+                                                                    </li>
+                                                                    <li>
+                                                                        <div class="row" style="margin-top:10px;">
+                                                                            <div class="col-lg-6">
+                                                                                <button style="width:70px;" class="btn bg-red btn-block btn-xs waves-effect" ng-click="kitchen.closeDropDown();">@I18n.T("Cancel")</button>
+                                                                            </div>
+                                                                            <div class="col-lg-6">
+                                                                                <button class="btn bg-green btn-block btn-xs waves-effect" ng-click="kitchen.addOrderOtherItem()">@I18n.T("Save")</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                        <div class="pull-left-lmargin">
+                                                            <button ng-disabled="kitchen.saving" type="button" data-toggle="tooltip" title="@I18n.T("Save And Print Order")" class="btn btn-default waves-effect waves-float cashier-btn" ng-click="kitchen.saveOrder(true)">
+                                                                <i class="material-icons">print</i><br />
+                                                                @I18n.T("Print") &amp; @I18n.T("Save")
+                                                            </button>
+                                                        </div>
+                                                        <div class="pull-left-lmargin">
+                                                            <button ng-disabled="kitchen.saving" type="button" data-toggle="tooltip" title="@I18n.T("Save Order")" class="btn btn-default waves-effect waves-float cashier-btn" ng-click="kitchen.saveOrder(false)">
+                                                                <i class="material-icons">save</i><br />
+                                                                @I18n.T("Save")
+                                                            </button>
+                                                        </div>
+                                                        <div class="pull-left-lmargin">
+                                                            <button ng-disabled="kitchen.saving" type="button" data-toggle="tooltip" ng-class="order.splitUsers.length>0 ? 'action-green':''" title="@I18n.T("Split Order")" class="btn btn-default waves-effect waves-float cashier-btn" onclick="$('#splitUsersModal').modal('show');">
+                                                                <i class="material-icons">call_split</i><br />
+                                                                @I18n.T("Split")
+                                                            </button>
+                                                        </div>
+                                                        <div class="dropup pull-left-lmargin">
+                                                            <div class="dropdown pull-left" title="Add Discount">
+                                                                <button type="button" ng-disabled="order.total == 0" ng-click="focusOn('discountComment')" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-default waves-effect waves-float cashier-btn">
+                                                                    <i class="material-icons">redeem</i><br/>
+                                                                    @I18n.T("Discount")
+                                                                </button>
+                                                                <ul class="other-item-menu dropdown-menu noclose" aria-labelledby="dLabel">
+                                                                    <li>
+                                                                        <input type="text" id="discountComment" class="form-control" placeholder="Comment" />
+                                                                        <input type="number" id="discountPrice" class="form-control" placeholder="@I18n.T("Price")" />
+                                                                    </li>
+                                                                    <li>
+                                                                        <div class="row" style="margin-top:10px;">
+                                                                            <div class="col-lg-6">
+                                                                                <button style="width:70px;" class="btn bg-red btn-block btn-xs waves-effect" ng-click="kitchen.closeDropDown();">@I18n.T("Cancel")</button>
+                                                                            </div>
+                                                                            <div class="col-lg-6">
+                                                                                <button class="btn bg-green btn-block btn-xs waves-effect" ng-click="kitchen.addUserDiscount()">@I18n.T("Save")</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>                                                   
+                                                </div>
+
+                                            </div>
+                                        </div>                                       
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" ng-show="order.pay_type_id == 2">
+                                <div class="col-lg-12">
+                                    <div class="clearfix">
+                                        <small class="pull-left" style="margin-top: 16px;margin-right: 10px;">@I18n.T("Credit Card Use Charge"):</small>
+                                        <div style="width:60px;" class="pull-left">
+                                            <div class="input-group input-group-sm" style="margin-bottom:0">
+                                                <span class="input-group-addon">%</span>
+                                                <div class="form-line">
+                                                    <input type="number" min="0" value="5" ng-model="order.creditCardChargePercentage" ng-change="onCreditCardPercentChange()" id="creditcharge" class="form-control"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div ng-show="order.creditCardChargePercentage > 0 && order.total > 0">
+                                        <small style="font-style:italic;">@I18n.T("Amount for extra charge"):</small> $<small>{{extraAmountToCharge | number:0}}</small>
+                                    </div>
+                                </div>
+                            
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="order-table-container">
+                                        <table class="table order-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>@I18n.T("Name")</th>
+                                                    <th>@I18n.T("Comment")</th>
+                                                    <th style="text-align:right">@I18n.T("Price")</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr ng-repeat="orderItem in order.items track by $index">
+                                                    <td><i class="material-icons order-item-action" ng-click="kitchen.removeOrderItem(orderItem.index)">remove</i></td>
+                                                    <td class="order-item-description">
+                                                        {{orderItem.menu_item_name}}
+                                                        <div class="ingredient-item" ng-if="orderItem.ingredients.length > 0">
+                                                            {{orderItem.menu_item_name}} (${{orderItem.price}})
+                                                        </div>
+                                                        <div ng-if="orderItem.ingredients.length > 0">
+                                                            <div class="ingredient-item" ng-repeat="ing in orderItem.ingredients">
+                                                                + {{kitchen.getIngredientName(ing.ingredient_id)}} (${{ing.ingredient_price}})
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td><input type="text" name="name" ng-model="orderItem.comment" style="width:100%;" /></td>
+                                                    <td style="text-align:right;">${{orderItem.total}}</td>
+                                                </tr>
+                                                <tr ng-repeat="item in order.discounts track by $index">
+                                                    <td><i class="material-icons order-item-action" ng-click="kitchen.removeDiscountItem(item.index)">remove</i></td>
+                                                    <td colspan="2">{{item.comment}}</td>
+                                                    <td style="text-align:right;"><span style="color:red;">-${{item.price}}</span></td>
+                                                </tr>
+                                                <tr ng-if="order.splitUsers.length>0 && order.total > 0">
+                                                    <td  colspan="4">
+                                                        <p class="col-teal">
+                                                            @I18n.T("Splited by") {{order.splitUsers.length + 1}} | <small style="color:#ccc">$@I18n.T("{{kitchen.getSplitPrice()}} each")</small>
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="order.items.length == 0">
+                                                    <td colspan="4" align="center">
+                                                        <small style="color:lightgrey">@I18n.T("No Items")</small>
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="order.items.length == 0">
+                                                    <td colspan="4">
+                                                        &nbsp;
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="order.items.length == 0">
+                                                    <td colspan="4">
+                                                        &nbsp;
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="order.items.length == 0">
+                                                    <td colspan="4">
+                                                        &nbsp;
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="order.items.length == 0">
+                                                    <td colspan="4">
+                                                        &nbsp;
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="kitchen-menu">
+                            <ul class="nav nav-tabs" role="tablist" style="margin-bottom:10px;">
+                                <li role="presentation" class="active">
+                                    <a ng-click="kitchen.showKitchenMenu()" href="#" data-toggle="tab">
+                                        <i class="material-icons">kitchen</i> @I18n.T("Kitchen")
+                                    </a>
+                                </li>
+                                <li role="presentation">
+                                    <a ng-click="kitchen.showServicesMenu()" href="#profile_with_icon_title" data-toggle="tab">
+                                        <i class="material-icons">layers</i> @I18n.T("Services")
+                                    </a>
+                                </li>
+                                <li>
+                                    <div class="input-group" style="margin-bottom:0;width:200px;margin-top:10px;">
+                                        <span class="input-group-addon" style="padding-right:5px;">
+                                            <i class="material-icons">search</i>
+                                        </span>
+                                        <div class="form-line">
+                                            <input type="text" ng-model="searchMenu" class="form-control date" placeholder="@I18n.T("Search menu") ...">
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                            <ul class="list-unstyled kitchen-menu-list">
+                                <li ng-repeat="menuItem in kitchen.menuItems">
+                                    <div class="menu-item" ng-if="menuItem.category !== undefined">
+                                        <button class="menu-button btn waves-effect" ng-click="kitchen.onMenuItemClick(menuItem)">                                           
+                                            {{menuItem.category.name | uppercase}}
+                                        </button>
+                                    </div>
+                                    <div class="menu-item" ng-if="menuItem.category === undefined">                                  
+                                        <div id="mi-{{menuItem.menuItem.id}}" class="dropdown" ng-if="menuItem.ingredients.length > 0">
+                                            <button data-placeholder="false" class="menu-button btn waves-effect extended-dp" data-target="#ingAdd-{{menuItem.menuItem.id}}" data-toggle="modal" aria-haspopup="true" aria-expanded="false">
+                                                <div class="menu-item-number">({{menuItem.menuItem.number}})</div>
+                                                {{menuItem.menuItem.name | uppercase}}
+                                            </button>
+                                            <div class="modal" id="ingAdd-{{menuItem.menuItem.id}}" role="dialog">
+                                                <div class="modal-dialog {{kitchen.getIngredientsGroupDialogSize(menuItem)}}" role="document">
+                                                    <div class="modal-content">
+                                                        
+                                                        <div class="modal-body">
+                                                            <div class="row">
+                                                                <div ng-repeat="group in kitchen.getIngredientsGroups(menuItem) track by $index" class="col-lg-{{kitchen.getIngredientsGroupCol(menuItem)}}">
+                                                                    <h4 class="ing-group-name">{{group[0].ingredients_group | uppercase}}</h4>
+                                                                    <ul class="ingredients-menu list-unstyled" aria-labelledby="dLabel">
+                                                                        <li ng-repeat="ing in group track by $index">
+                                                                            <input ng-if="!ing.ingredients_group_single_select" type="checkbox" id="ing-{{menuItem.menuItem.id}}-{{group[0].ingredients_group_number}}-{{ing.ingredient_id}}" class="chk-col-red">
+                                                                            <input ng-if="ing.ingredients_group_single_select" type="radio" name="ing-{{menuItem.menuItem.id}}-{{group[0].ingredients_group_number}}" id="ing-{{menuItem.menuItem.id}}-{{group[0].ingredients_group_number}}-{{ing.ingredient_id}}" class="chk-col-red">
+                                                                            <label for="ing-{{menuItem.menuItem.id}}-{{group[0].ingredients_group_number}}-{{ing.ingredient_id}}">{{kitchen.getIngredientName(ing.ingredient_id) | uppercase}} (${{ing.ingredient_price}})</label>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button class="btn bg-red waves-effect" data-dismiss="modal" ng-click="kitchen.cancelOrderItem(menuItem)">@I18n.T("CANCEL")</button>
+                                                            <button class="btn bg-green waves-effect" ng-click="kitchen.addOrderItem(menuItem)" data-dismiss="modal">@I18n.T("SAVE")</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button ng-if="menuItem.ingredients.length === 0" class="menu-button btn waves-effect" ng-click="kitchen.addOrderItem(menuItem)" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <div class="menu-item-number">({{menuItem.menuItem.number}})</div>
+                                            {{menuItem.menuItem.name | uppercase}}
+                                        </button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="splitUsersModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Split Bill")</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row clearfix">
+                                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <div ng-if="!kitchen.user.isCash" class="card">
+                                            <div class="header">
+                                                <input type="text" id="users-ac" ng-model="kitchen.splitUserAcText" class="filter-guest" placeholder="@I18n.T("Search guest by name or bed number")" />
+                                                <button ng-click="kitchen.addSplitUser()" class="btn bg-red waves-effect">@I18n.T("Add")</button>
+                                            </div>
+                                            <div class="body table-responsive">
+                                                <div style="min-height:200px;">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>@I18n.T("Pic")</th>
+                                                                <th>@I18n.T("Name")</th>
+                                                                <th>@I18n.T("Bed")</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr ng-repeat="u in order.splitUsers">
+                                                                <td><i style="cursor:pointer;" class="material-icons order-item-action" ng-click="kitchen.removeSplitUser(u)">remove</i></td>
+                                                                <td><img ng-src="/guestimages/{{u.pic}}" width="48" height="48" /></td>
+                                                                <td>{{u.name}}</td>
+                                                                <td>{{u.bed_id}}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div ng-if="kitchen.user.isCash">
+                                            <input type="number" min="0" ng-model="order.splitCashCount" value="{{order.splitUsers.length}}" />
+                                            <button ng-click="kitchen.addCashSplitUser()">@I18n.T("Save")</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="print">
+                <h4 ng-if="kitchen.user.isCash">@I18n.T("Order for guest | by") {{order.staffName}}</h4>
+                <h4 ng-if="!kitchen.user.isCash">@I18n.T("Order for") {{kitchen.user.name}} ({{kitchen.user.bed_id}}) | @I18n.T("by") {{order.staffName}}</h4>
+                <h5>{{date | date:'MM/dd/yyyy HH:mm'}}</h5>
+                <table class="table order-table">
+                    <tbody>
+                        <tr ng-repeat="orderItem in order.items">
+                            <td class="menu-print">                                
+                                <div class="menu-print-item">{{$index + 1}}. {{orderItem.menu_item_name}}</div>
+                                <div ng-if="orderItem.ingredients.length > 0">
+                                    <div class="ingredient-item" ng-repeat="ing in orderItem.ingredients">
+                                        <span>+ {{kitchen.getIngredientName(ing.ingredient_id)}}</span>
+                                    </div>
+                                </div>
+                                <span class="menu-print-comment" ng-if="orderItem.comment.length > 0"><b>@I18n.T("Note"):</b> {{orderItem.comment}}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+</div>
+
+
+
+
+
+

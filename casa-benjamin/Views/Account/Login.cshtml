@@ -1,0 +1,127 @@
+﻿@{ 
+    Layout = "";
+}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <title></title>
+    <!-- Favicon-->
+
+    <!-- Bootstrap Core Css -->
+    <link href="/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Waves Effect Css -->
+    <link href="/plugins/node-waves/waves.css" rel="stylesheet" />
+
+    <!-- Animation Css -->
+    <link href="/plugins/animate-css/animate.css" rel="stylesheet" />
+
+    <!-- JQuery DataTable Css -->
+    <link href="/plugins/jquery-datatable/skin/bootstrap/css/dataTables.bootstrap.css" rel="stylesheet">
+
+    <!-- Morris Chart Css-->
+    <link href="/plugins/morrisjs/morris.css" rel="stylesheet" />
+
+    <!-- Custom Css -->
+    <link href="/css/style.css" rel="stylesheet">
+
+    <style>
+        .login-box {
+            margin-top: 200px;
+        }
+
+        .logo-img {
+            position: absolute;
+            width: 128px;
+            top: -97px;
+            left: 102px;
+        }
+    </style>
+
+    <script src="/plugins/jquery/jquery.min.js"></script>
+</head>
+
+<body class="login-page">
+    <div class="login-box">
+        <div class="card">
+            <div class="body">
+                <form id="sign_in"action="/account/loginform" method="POST">
+                    <img src="/images/logo.png" class="logo-img"/>
+                    <div class="msg">@I18n.T("Sign in to start your session")</div>
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="material-icons">person</i>
+                        </span>
+                        <div class="form-line">
+                            <input type="text" class="form-control" name="user" placeholder="Username" required autofocus>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="material-icons">lock</i>
+                        </span>
+                        <div class="form-line">
+                            <input type="password" class="form-control" name="password" placeholder="Password" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        @if (ViewBag.Error != null)
+                        {
+                            <div style="margin:10px 0;color:red;text-align:center;">
+                                @I18n.T("Wrong email or password")
+                            </div>
+                        }
+                        <div class="col-xs-7 p-t-5">
+                        </div>
+                        <div class="col-xs-5">                            
+                            <button class="btn btn-block bg-pink waves-effect waves-float" type="submit">@I18n.T("SIGN IN")</button>
+                        </div>
+                    </div>
+                    <div class="row m-t-15 m-b--20">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        (function () {
+            //On focus event
+            $('.form-control').focus(function () {
+                $(this).parent().addClass('focused');
+            });
+
+            //On focusout event
+            $('.form-control').focusout(function () {
+                var $this = $(this);
+                if ($this.parents('.form-group').hasClass('form-float')) {
+                    if ($this.val() == '') { $this.parents('.form-line').removeClass('focused'); }
+                }
+                else {
+                    $this.parents('.form-line').removeClass('focused');
+                }
+            });
+
+            //On label click
+            $('body').on('click', '.form-float .form-line .form-label', function () {
+                $(this).parent().find('input').focus();
+            });
+
+            //Not blank form
+            $('.form-control').each(function () {
+                if ($(this).val() !== '') {
+                    $(this).parents('.form-line').addClass('focused');
+                }
+            });
+        })();
+
+    </script>
+
+</body>
+
+</html>

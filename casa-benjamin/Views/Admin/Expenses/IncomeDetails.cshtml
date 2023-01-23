@@ -1,0 +1,81 @@
+﻿@model List<Income>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    List<IncomeCategory> incomeCategories = ReportsManager.Instance.GetIncomeCategories();
+
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">@ViewBag.Title</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT")
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+        <br/>
+        <div class="row">
+            <div class="col-xs-12">
+                <select id="cat" class="select2">
+                    @foreach (var item in incomeCategories)
+                    {
+                        <option @if (item.id == ViewBag.EntityId) {<text>selected="selected"</text>} value="@item.id">@item.name (@item.income_category_type.ToString())</option>
+                    }
+            </select>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card checkouts">
+                <div class="body">
+                    <table class="dataTable table-small table-bordered" data-title="@I18n.T("Expenses Report")" style="width:100%;">
+
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Category")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th>@I18n.T("Value")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                             var cat = incomeCategories.First(x => x.id == item.category_id);
+                                <tr>
+                                    <td>@item.date.ToShortUIDateTimeString()</td>
+                                    <td>@cat.name</td>
+                                    <td>@item.comment</td>
+                                    <td>$@item.val.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>$@Model.Sum(x=>x.val).ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+     $("#updateReport").click(function () {
+         var from = $("#fromDate").val();
+         var cat = $("#cat :selected").val();
+         window.location = "@ViewBag.DataUr?from=" + from + "&id=" +cat;
+        });
+</script>

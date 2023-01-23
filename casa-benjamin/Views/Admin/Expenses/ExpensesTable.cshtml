@@ -1,0 +1,101 @@
+﻿@model Dictionary<DateTime, List<Expense>>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    List<ExpenseCategory> expensesCategories = ReportsManager.Instance.GetExpenseCategories();
+    List<IncomeCategory> incomeCategories = ReportsManager.Instance.GetIncomeCategories();
+
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">@ViewBag.Title</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT")
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card checkouts">
+                <div class="body">
+                    <table class="dataTable table-small table-bordered" data-title="@I18n.T("Expenses Report")" style="width:100%;">
+
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Name")</th>
+                                <th>@I18n.T("Type")</th>
+                                @foreach (var item in Model)
+                                {
+                                    <th>@item.Key.ToString("MMMM yyyy")</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                List<int> allCategories = Model.SelectMany(x => x.Value).Select(y => y.expense_category_id).Distinct().OrderBy(x => x).ToList();
+                                int i = 0;
+                            }
+                            @foreach (var catId in allCategories)
+                            {
+                                var id = catId;
+                                string name = "";
+                                string type = "";
+                              
+                                ExpenseCategory cat = expensesCategories.First(x => x.id == id);
+                                name = cat.name;
+                                type = cat.expense_category_type.ToString();
+                                                           
+
+                                <tr>
+                                    <td>@name</td>
+                                    <td>@type</td>
+
+                                    @foreach (var kv in Model)
+                                    {
+                                        var e = kv.Value.Where(x => x.expense_category_id == id);
+                                        <td>
+                                            <a href="@ViewBag.DetailTableUrl?from=@kv.Key.ToShortUIMonthlyDateString()&id=@id">
+                                                
+                                                @if (e != null)
+                                                {
+                                                    <text>@e.Sum(x=>x.expense_val).ToString("N0")</text>
+                                                }
+                                                else
+                                                { <text>0</text>}
+                                           </a>
+                                        </td>
+                                    }
+                                </tr>
+                                i++;
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td></td>
+                                <td></td>
+                                @foreach (var kv in Model)
+                                {
+                                    <td>@kv.Value.Sum(x => x.expense_val).ToString("N0")</td>
+                                }
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+     $("#updateReport").click(function () {
+            var from = $("#fromDate").val();
+            var to = $("#toDate").val();
+         window.location = "@ViewBag.DataUrl?from=" + from + "&to=" + to;
+        });
+</script>

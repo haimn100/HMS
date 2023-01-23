@@ -1,0 +1,135 @@
+﻿@model List<OrderRow>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    int ghostUserId = CacheManager.Instance.GhostUser.id;
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+    Staff staff = (Staff)ViewBag.Staff;
+}
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("STAFF ORDERS REPORT") - @staff.name</h1>
+    <div class="block-header">           
+            <div style="width:200px;float: left;margin-right: 10px;">
+                <select id="staff" class="select2" placeholder="@I18n.T("Employee")">
+                    <option></option>
+                    @foreach (var item in CacheManager.Instance.Staff.Where(x => x.type == UserType.Employee))
+                    {
+                        <option value="@item.id" @if (item.id == staff.id) { <text> selected="selected" </text>  }>@item.name</option>
+                    }
+                </select>
+            </div>    
+            <div class="pull-left">
+                <input type="text" id="fromDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" />
+                <select class="js-hours" data-hour="@dateQuery.From.Value.ToString("HH")" id="fromDateHours"></select>
+                <br />
+                <input type="text" id="toDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" />
+                <select class="js-hours" data-hour="@dateQuery.To.Value.ToString("HH")" id="toDateHours"></select>
+            </div>
+            <button id="updateReport">@I18n.T("Update")</button>       
+    </div>
+    <div class="row" style="margin-bottom:10px;">
+        <div class="col-lg-12">
+            <em><b>@I18n.T("Total Cash")</b>: $@Model.Where(x => x.Order.pay_type_id != PayType.Cuenta).Sum(x => x.Order.total).ToString("N0")</em><br />
+            <em><b>@I18n.T("TOTAL CUENTA")</b>: $@Model.Where(x => x.Order.pay_type_id == PayType.Cuenta).Sum(x => x.Order.total).ToString("N0")</em><br />
+            <em id="searchTotalContainer" style="display:none;"><b>@I18n.T("Search Total")</b>: <span id="searchTotal"></span></em>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card clearfix">
+                <div class="body dataTable-no-header">
+                    <table id="reportTable" class="table table-bordered dataTable">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Order Id")</th>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th>@I18n.T("Item")</th>
+                                <th>@I18n.T("Pay Type")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th style="text-align:right;">@I18n.T("Total")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {                            
+                                foreach (var oi in item.OrderItems)
+                                {
+                                    <tr>
+                                        <td><a href="/kitchen/order?orderid=@item.Order.id">@item.Order.id</a></td>
+                                        <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                                        <td>@item.Order.staff_name</td>
+                                        <td>
+                                            @oi.menu_category_name > @oi.menu_item_name
+                                            @if (item.Order.split_total > 0)
+                                            {
+                                                <text> <small>(@I18n.T("splited"))</small></text>
+                                            }
+                                            @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                                            {
+                                                <br />
+                                                <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                                            }
+                                        </td>
+                                        <td>@item.Order.pay_type_id.ToString()</td>
+
+                                        <td>
+                                            @oi.comment
+                                            @if (item.Order.discount > 0)
+                                            {
+                                                <text><span style="color:red;">Discount -$@(item.Order.discount / item.OrderItems.Count)</span></text>
+                                            }
+                                        </td>
+                                        <td align="right">
+                                            @if (item.Order.is_canceled || item.Order.pay_type_id != PayType.Cuenta)
+                                            {
+                                                if (item.Order.is_canceled)
+                                                {
+                                                    <text>@I18n.T("Canceled")</text>
+                                                }
+                                                <text>-$@oi.total.ToString("N0")</text>
+                                            }
+                                            else
+                                            {
+                                                <text>$@oi.total.ToString("N0")</text>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(document).ready(function myfunction() {
+        
+        $("table").on('search.dt', function () {
+            var dt = $("#reportTable").DataTable(); 
+            var term = dt.search();
+            if (term.length > 0) {
+                var sum = dt.column(6, { filter:'applied'}).data().sum();
+                $("#searchTotal").html("$" + numeral(sum).format('0,0'));
+                $("#searchTotalContainer").show();
+            } else {
+                $("#searchTotalContainer").hide();
+                $("#searchTotal").html("$0");
+            }
+        });
+    });
+
+
+    $("#updateReport").click(function () {
+        var from = $("#fromDate").val() + " " + $("#fromDateHours").val();      
+        var to = $("#toDate").val() + " " + $("#toDateHours").val();
+
+        var staffid = $("#staff option:selected").val();
+        window.location = "/reports/OrdersByStaff?from=" + from + "&to=" + to + "&staff_id=" + staffid;
+    });
+
+</script>

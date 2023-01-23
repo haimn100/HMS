@@ -1,0 +1,503 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = @I18n.T("Dashboard");
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    string kitchenOrdersUrl = (dateQuery.Monthly ? "/reports/monthlyorders" : "/reports/dailyorders") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1": Request.Url.Query);
+    string servicesOrdersUrl = (dateQuery.Monthly ? "/reports/monthlyserviceorders" : "/reports/dailyserviceorders") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1" : Request.Url.Query);
+    string kitchenCanceledOrdersUrl = kitchenOrdersUrl + "&datatable-search=canceled";
+    string servicesCanceledOrdersUrl = servicesOrdersUrl + "&datatable-search=canceled";
+    string checkOutUrl = (dateQuery.Monthly ? "/reports/monthlycheckouts" : "/reports/checkouts") + Request.Url.Query;
+    string checkInsUrl = (dateQuery.Monthly ? "/reports/monthlycheckins" : "/reports/checkins") + Request.Url.Query;
+    string menuItemDetailUrl = (dateQuery.Monthly ? "/reports/MonthlyMenuItemDetails" : "/reports/DailyMenuItemDetails") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1" : Request.Url.Query);
+    string guestCountUrl = (dateQuery.Monthly ? "/reports/GuestCount" : "/reports/guestlist") + "?date=" + dateQuery.FromOrDefault().ToString("yyyy-MM-dd");
+    bool hasGuestCountUrl = dateQuery.Monthly || (dateQuery.From == dateQuery.To);
+}
+
+<div class="container-fluid report-screen" ng-controller="ReportsDashboardController" ng-cloak>
+    <h1 class="reports-title">
+        @if (dateQuery.Monthly) { <text>@I18n.T("MONTHLY")</text> }
+else
+{<text>@I18n.T("DAILY")</text> } @I18n.T("REPORT")
+    </h1>
+    <div class="block-header">
+        <h2>
+            @if (dateQuery.Monthly)
+            {
+                @I18n.T("FOR") 
+                <text><b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b></text>
+            }
+            else
+            {
+                @I18n.T("DAILY REPORT")
+                <text><b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b></text>
+            }
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+</div>
+<div ng-if="loading">
+
+  <div class="preloader pl-size-xl">
+            <div class="spinner-layer">
+                <div class="circle-clipper left">
+                    <div class="circle"></div>
+                </div>
+                <div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div ng-if="error">
+        {{errorText}}
+    </div>
+    <div ng-if="!loading">
+        <!-- Widgets -->
+        <div class="row clearfix">
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+                <div class="info-box bg-light-green hover-expand-effect box-url" onclick="window.location='@kitchenOrdersUrl'">
+                    <div class="icon">
+                        <i class="material-icons">kitchen</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("KITCHEN ORDERS")</div>
+                        <div class="number count-to" data-from="0" data-to="{{daily.periodOrders}}" data-speed="1000" data-fresh-interval="20"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+
+                <div class="info-box bg-red hover-expand-effect box-url" data-toggle="tooltip" title="Canceled Kitchen Orders" onclick="window.location='@kitchenCanceledOrdersUrl'">
+                    <div class="icon">
+                        <i class="material-icons">kitchen</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("C. KITCHEN ORDERS")</div>
+                        <div class="number count-to" data-from="0" data-to="{{daily.periodCanceledOrders}}" data-speed="1000" data-fresh-interval="20"></div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+
+                <div class="info-box bg-light-green hover-expand-effect box-url" onclick="window.location='@servicesOrdersUrl'">
+                    <div class="icon">
+                        <i class="material-icons">kitchen</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("SERVICES ORDERS")</div>
+                        <div class="number count-to" data-from="0" data-to="{{daily.periodServicesOrders}}" data-speed="1000" data-fresh-interval="20"></div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+
+                <div class="info-box bg-red hover-expand-effect box-url" data-toggle="tooltip" title="@I18n.T("Canceled Services Orders")" onclick="window.location='@servicesCanceledOrdersUrl'">
+                    <div class="icon">
+                        <i class="material-icons">kitchen</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("C. SERVICES ORDERS")</div>
+                        <div class="number count-to" data-from="0" data-to="{{daily.periodServicesCanceledOrders}}" data-speed="1000" data-fresh-interval="20"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="row clearfix">
+            <div class="col-lg-6 col-sm-6 col-xs-12">
+                <div class="info-box bg-cyan">
+                    <div class="icon">
+                        <i class="material-icons">person_outline</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("CHECKINS") / @I18n.T("CHECKOUTS")</div>
+                        <div class="number"><a href="@checkInsUrl" style="color:#fff;">{{daily.periodUsers.length}}</a> / <a href="@checkOutUrl" style="color:#fff;">{{daily.periodCheckouts.length}}</a></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-lg-6 col-sm-6 col-xs-12" @if (hasGuestCountUrl) { <text> onclick="window.location='@guestCountUrl'" </text> }>
+
+                <div class="info-box bg-orange hover-expand-effect box-url">
+                    <div class="icon">
+                        <i class="material-icons">person</i>
+                    </div>
+                    <div class="content">
+                        <div class="text"><span ng-if="isMonthOrNotOneDay">@I18n.T("AVERAGE")</span> @I18n.T("GUESTS COUNT")</div>
+                        <div class="number">{{daily.stayingGuests | number:0}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- #END# Widgets -->
+
+        <div class="row">
+
+            @if (!dateQuery.Monthly)
+            {
+                <div class="col-lg-6 col-xs-12">
+                    <div class="card">
+                        <i class="material-icons card-info-icon tippy" data-size="big" title="Represents all the revenue that is still not billed.">info_outline</i>
+                        <div class="body bg-teal">
+                            <div class="font-bold m-b--35">@I18n.T("ACCURED REVENUE")</div>
+                            <ul class="dashboard-stat-list">
+                                <li>
+                                    @I18n.T("Kitchen")
+                                    <span class="pull-right"><b>${{daily.accruedKitchenSum | number}}</b></span>
+                                </li>
+                                <li>
+                                    @I18n.T("Services")
+                                    <span class="pull-right"><b>${{daily.accruedServicesSum | number}}</b></span>
+                                </li>
+                                <li>
+                                    @I18n.T("Accomodation")
+                                    <span class="pull-right"><b>${{daily.accruedAccomodationSum | number}}</b></span>
+                                </li>
+                                <li>
+                                    @I18n.T("Discount")
+                                    <span class="pull-right"><b>- ${{daily.accruedDiscountsSum | number}}</b></span>
+                                </li>
+                                <li>
+                                    <a href="/reports/residents" style="color:#fff;text-decoration:underline">@I18n.T("Residents")</a>
+                                    <span class="pull-right"><b>-${{daily.residentsSum | number}}</b></span>
+                                </li>
+                                <li>
+                                    <b>@I18n.T("Total"):</b>
+                                    <span class="pull-right"><b>${{daily.accruedRevenue | number}}</b></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="@{if (dateQuery.Monthly){ <text>col-lg-12</text> } else { <text>col-lg-6</text> } } col-xs-12">
+                <div class="card">
+                    <i class="material-icons card-info-icon tippy" data-size="big" title="Represents money earned in those dates.That means all orders from kitchen and services that was payed in cash or credit and all the money from checkouts">info_outline</i>
+                    <div class="body bg-teal">
+                        <div class="font-bold m-b--35">@I18n.T("REVENUE")</div>
+                        <ul class="dashboard-stat-list">
+                            <li>
+                                @I18n.T("Cash And Credit")
+                                <span class="pull-right"><b>${{cashAndCreditRevenueSum | number}}</b></span>
+                            </li>
+                            <li>
+                                <a href="@checkOutUrl" class="report-text-link">@I18n.T("Check Outs")</a>
+                                <span class="pull-right"><b>${{daily.periodCheckoutsTotal | number}}</b></span>
+                            </li>
+                            <li>
+                                <b>@I18n.T("Total"):</b>
+                                <span class="pull-right"><b>${{daily.totalRevenue | number}}</b></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-lg-6 col-xs-12">
+                <div class="card">
+                    <i class="material-icons card-info-icon tippy" data-size="big" title="Breakdown of payment methods from all kitchen orders">info_outline</i>
+
+                    <div class="body bg-teal">
+                        <div class="font-bold m-b--35 chart-title">@I18n.T("KITCHEN PAYMENT BREAKDOWN")</div>
+                        <div id="paymentBreakdownPie" style="height:140px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-xs-12">
+                <div class="card">
+                    <i class="material-icons card-info-icon tippy" data-size="big" title="Breakdown of payment methods from all services orders">info_outline</i>
+
+                    <div class="body bg-teal">
+                        <div class="font-bold m-b--35 chart-title">@I18n.T("SERVICES PAYMENT BREAKDOWN")</div>
+                        <div id="paymentServicesBreakdownPie" style="height:140px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-xs-12">
+                <div class="card" style="min-height:380px;">
+                    <div class="header">
+                        <h2>@I18n.T("Most Popular Kitchen Items")</h2>
+                    </div>
+                    <div class="body">
+                        <table id="kitchenTable" class="table table-small dataTable">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Menu Item")</th>
+                                    <th>@I18n.T("Amount")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="item in popularMenuItems">
+                                    <td><a href="@menuItemDetailUrl&menuItemId={{item.menu_item_id}}">{{item.menu_category_name}} > {{item.menu_item_name}}</a></td>
+                                    <td>{{item.total}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-xs-12">
+                <div class="card" style="min-height:380px;">
+                    <div class="header">
+                        <h2>@I18n.T("Most Popular Services Items")</h2>
+                    </div>
+                    <div class="body">
+
+                        <table id="servicesTable" class="table table-small dataTable">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Menu Item")</th>
+                                    <th>@I18n.T("Amount")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="item in popularServicesMenuItems">
+                                    <td><a href="@menuItemDetailUrl&menuItemId={{item.menu_item_id}}">{{item.menu_category_name}} > {{item.menu_item_name}}</a></td>
+                                    <td>{{item.total}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-xs-12">
+                <div class="card" style="min-height:380px;">
+                    <div class="header">
+                        <h2>@I18n.T("Nationalities")</h2>
+                    </div>
+                    <div class="body">
+
+                        <table id="servicesTable" class="table table-small dataTable">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Nationality")</th>
+                                    <th>@I18n.T("Count")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="item in daily.demographics">
+                                    <td>{{item.nationality | country}}</td>
+                                    <td>{{item.cnt}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+                var monthly = @dateQuery.Monthly.ToString().ToLower();
+                var from = $("#fromDate").val();
+                var to = $("#toDate").val();
+                var query = "from=" + from + "&to=" + to + "&monthly=" + monthly;
+
+                myApp.controller('ReportsDashboardController', function ($scope, $timeout, $http) {
+                    $scope.loading = true;
+                    $scope.error = false;                    
+                    $scope.isMonthOrNotOneDay = monthly || (from !== to); 
+
+
+                    function getPeriodData() {
+                        $scope.loading = true;
+                        $http({
+                            method: 'GET',
+                            url: '/reports/GetPeriodData?' + query
+                        }).then(function (response) {
+                            $scope.daily = response.data;
+                            $scope.loading = false;
+
+                            $scope.cashAndCreditRevenueSum = response.data["periodCashAndCreditOrdersSum"] + response.data["periodServicesCashAndCreditOrdersSum"];
+
+
+                            $timeout(function () {                             
+
+                                $('[data-toggle="tooltip"]').tooltip();
+
+                                var pieData = getPaymentBreakdownPie(response.data.ordersCash, response.data.ordersCredit, response.data.ordersDebit);
+                                ChartHelper.pie('paymentBreakdownPie', '', pieData);
+
+                                var pieServicesData = getPaymentBreakdownPie(response.data.ordersServicesCash, response.data.ordersServicesCredit, response.data.ordersServicesDebit);
+                                ChartHelper.pie('paymentServicesBreakdownPie', '', pieServicesData);
+
+                                tippy('.tippy', {
+                                    animation: 'shift',
+                                    theme: 'dark',
+                                    arrow: true
+                                });
+
+                            });
+
+
+                                }, function (response) {
+                            $scope.error = false;
+                            $scope.errorText = response.data;
+                                });
+                            }
+                    function getPopularMenuItems() {
+                        $scope.loading = true;
+
+                        $http({
+                            method: 'GET',
+                            url: '/reports/GetOrderItemsCountList?catType=1&' + query
+                        }).then(function (response) {
+                            $scope.popularMenuItems = response.data;
+                            $scope.loading = false;
+
+                            $timeout(function () {
+                                $("#kitchenTable").DataTable({
+                                    "order": [[1, "desc"]],
+                                    dom: 'Bfrtip',
+                                    buttons: [
+                                        'copy', 'csv', 'excel', 'pdf',
+                                        {
+                                            extend: 'print',
+                                            text: 'Print',
+                                            title: "",
+                                            autoPrint: true,
+                                            footer: true,
+                                            customize: function (win) {
+                                                $(win.document.body)
+                                                    .css('font-size', '10pt')
+                                                    .css('margin', '20px');
+
+                                                $(win.document.body).find('tfoot tr')
+                                                    .addClass('total-row');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+
+                        }, function (response) {
+                            console.error(response.data);
+                            });
+
+                        $http({
+                            method: 'GET',
+                            url: '/reports/GetOrderItemsCountList?catType=2&' + query
+                        }).then(function (response) {
+                            $scope.popularServicesMenuItems = response.data;
+                            $scope.loading = false;
+
+                            $timeout(function () {
+                                $("#servicesTable").DataTable({
+                                    "order": [[1, "desc"]],
+                                    dom: 'Bfrtip',
+                                    buttons: [
+                                        'copy', 'csv', 'excel', 'pdf',
+                                        {
+                                            extend: 'print',
+                                            text: 'Print',
+                                            title: "",
+                                            autoPrint: true,
+                                            footer: true,
+                                            customize: function (win) {
+                                                $(win.document.body)
+                                                    .css('font-size', '10pt')
+                                                    .css('margin', '20px');
+
+                                                $(win.document.body).find('tfoot tr')
+                                                    .addClass('total-row');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+
+                        }, function (response) {
+                            console.error(response.data);
+                        });
+                    }
+
+                    function getUsersPie(users) {
+                        var seriesData = { name: "@I18n.T("Gender")", data: [] };
+                    var females = _.filter(users, function (user, i) {
+                            return user.sex === false;
+                        }).length;
+                        var males = _.filter(users, function (user, i) {
+                            return user.sex === true;
+                        }).length;
+
+                        seriesData.data.push({
+                            name: "@I18n.T("Male")",
+                            y: males,
+                            color: '#0029ff'
+                        });
+
+                        seriesData.data.push({
+                            name: "@I18n.T("Female")",
+                            y: females,
+                            color: '#ff007f'
+                        });
+
+                        return [seriesData];
+                    }
+                    function getPaymentBreakdownPie(cash, credit, debit) {
+
+                        var seriesData = { name: "", data: [] };
+
+                    seriesData.data.push({
+                        name: "@I18n.T("Cuenta")",
+                            y: debit
+                        });
+
+                        seriesData.data.push({
+                            name: "@I18n.T("Cash")",
+                            y: cash
+                        });
+
+                        seriesData.data.push({
+                            name: "@I18n.T("Credit")",
+                            y: credit
+                        });
+
+                        return [seriesData];
+                    }
+
+                    getPeriodData();
+                    getPopularMenuItems();
+
+                    $("#updateReport").click(function () {
+                        var from = $("#fromDate").val();
+                        var to = $("#toDate").val();
+
+                        if (monthly) {
+                            window.location = "/reports/monthlydashboard?from=" + from + "&to=" + to;
+                        } else {
+                            window.location = "/reports/dailydashboard?from=" + from + "&to=" + to;
+                        }
+                    });
+    });
+
+    myApp.filter('country', function () {
+            return function (input) {
+                input = input || '';
+                var out = '';
+                var countries = MyHostel.i18n.getCountriesAndCitiesList({ useSelect2Format: true });
+
+                for (var i = 0; i < countries.length; i++) {
+                    if (countries[i].id == input) {
+                        return countries[i].text;
+                    }
+                }
+            
+                return input;
+            };
+        })
+</script>

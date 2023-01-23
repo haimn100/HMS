@@ -1,0 +1,143 @@
+﻿@model List<OrderRow>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    int ghostUserId = CacheManager.Instance.GhostUser.id;
+    string dateFormat = "MM/dd/yyyy HH:mm";
+    int menuItemID = (int)ViewBag.MenuItemID;
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">
+        @if (dateQuery.Monthly)
+        { <text>@I18n.T("MONTHLY")</text> }
+else
+{<text>@I18n.T("DAILY")</text> } @I18n.T("REPORT") - <span style="color:#ff5722;">@Model.First().OrderItems.First().menu_category_name > @Model.First().OrderItems.First().menu_item_name.ToUpper()</span>
+    </h1>
+    <div class="block-header">
+        <h2>
+            @if (dateQuery.Monthly)
+            {
+                @I18n.T("FOR")
+                <text><b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b> 
+                <input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b></text>
+            }
+            else
+            {
+                @I18n.T("DAILY REPORT")
+                <text><b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="datepicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b></text>
+            }
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+
+    <div class="row clearfix">
+        <div class="col-lg-6 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL REVENUE")</div>
+                    <div class="number">$@Model.Sum(x => x.OrderItems.Sum(y=>y.total)).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-sm-6 col-xs-12">
+            <div class="info-box bg-cyan hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">kitchen</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL ORDERS")</div>
+                    <div class="number">@Model.Count.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body dataTable-no-header">
+                    <div class="table-responsive">
+                        <table class="table table-bordered dataTable">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Order Id")</th>
+                                    <th>@I18n.T("Date")</th>
+                                    <th>@I18n.T("Employee")</th>
+                                    <th>@I18n.T("Guest")</th>
+                                    <th>@I18n.T("Bed")</th>
+                                    <th>@I18n.T("Item")</th>
+                                    <th>@I18n.T("Pay Type")</th>
+                                    <th>@I18n.T("Comment")</th>
+                                    <th style="text-align:right;">@I18n.T("Total")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    bool noPay = item.Order.is_canceled;
+
+                                    foreach (var oi in item.OrderItems)
+                                    {
+                                        <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                                            <td><a href="/kitchen/order?orderid=@item.Order.id">@item.Order.id</a></td>
+                                            <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                                            <td>@item.Order.staff_name</td>
+                                            <td><a href="/guest/userprofile?userid=@item.Order.user_id">@item.Order.user_name</a></td>
+                                            <td>@item.Order.user_bed</td>
+                                            <td>
+                                                @oi.menu_category_name > @oi.menu_item_name
+                                                @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                                                {
+                                                    <br />
+                                                    <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                                                }
+                                            </td>
+                                            <td>@item.Order.pay_type_id.ToString()</td>
+
+                                            <td>@oi.comment</td>
+                                            <td align="right">
+                                                @if (item.Order.is_canceled)
+                                                {
+                                                    <text>-$@oi.total.ToString("N0")</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>$@oi.total.ToString("N0")</text>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="8"></td>
+                                    <td align="right">
+                                        $@Model.Where(x=> !x.Order.is_canceled).Sum(x => x.OrderItems.Sum(y => y.total)).ToString("N0")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        $("#updateReport").click(function () {
+            var from = $("#fromDate").val();
+            var to = $("#toDate").val();
+            window.location = window.location.pathname + "?from=" + from + "&to=" + to + "&menuitemid=" + @menuItemID;
+        });
+    });
+
+</script>
+

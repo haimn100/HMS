@@ -1,0 +1,193 @@
+﻿@model List<Order>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    int ghostUserId = CacheManager.Instance.GhostUser.id;
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">
+        @if (dateQuery.Monthly)
+        { <text>@I18n.T("MONTHLY")</text> }
+else
+{<text>@I18n.T("DAILY")</text> } @I18n.T("REPORT")
+    </h1>
+    <div class="block-header">
+        <h2>
+            @if (dateQuery.Monthly)
+            {
+                @I18n.T("FOR")
+                <text><b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b></text>
+            }
+            else
+            {
+                @I18n.T("DAILY REPORT")
+                <text><b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b></text>
+            }
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+
+    <div class="row clearfix">
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL REVENUE")</div>
+                    <div class="number">$@Model.Where(y => !y.is_canceled).Sum(x => x.total).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-red hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CANCELED")</div>
+                    <div class="number">$@Model.Where(y => y.is_canceled).Sum(x => x.total).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-cyan hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">kitchen</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("ORDERS COUNT")</div>
+                    <div class="number">@Model.Where(x => !x.is_canceled).Count().ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-red hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">kitchen</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("CANCELED COUNT")</div>
+                    <div class="number">@Model.Where(x => x.is_canceled).Count().ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CASH")</div>
+                    <div class="number">$@Model.Where(y => !y.is_canceled && y.pay_type_id == PayType.Cash).Sum(x => x.total).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CREDIT")</div>
+                    <div class="number">$@Model.Where(y => !y.is_canceled && y.pay_type_id == PayType.Credit).Sum(x => x.total).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-12 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CUENTA")</div>
+                    <div class="number">$@Model.Where(y => !y.is_canceled && y.pay_type_id == PayType.Cuenta).Sum(x => x.total).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body dataTable-no-header">
+                        <div class="table-responsive">
+                            <table class="table dataTable" data-page-total-col="7" data-total="@Model.Where(x=> !x.is_canceled).Sum(y=>y.total)">
+                                <thead>
+                                    <tr>
+                                        <th>@I18n.T("Id")</th>
+                                        <th>@I18n.T("Date")</th>
+                                        <th>@I18n.T("Guest")</th>
+                                        <th>@I18n.T("Bed")</th>
+                                        <th>@I18n.T("Employee")</th>
+                                        <th>@I18n.T("Pay Type")</th>
+                                        <th>@I18n.T("Comment")</th>
+                                        <th>@I18n.T("Total")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.OrderByDescending(x => x.order_date))
+                                    {
+                                        <tr>                                           
+                                            <td><a href="/kitchen/order?orderid=@item.id">@item.id</a></td>
+                                            <td>@item.order_date.ToShortUIDateTimeString()</td>
+                                            <td>
+                                                @if (item.user_id == ghostUserId)
+                                                {
+                                                    <text>@item.user_name</text>
+                                                }
+                                                else
+                                                {
+                                                    <a href="/guest/userprofile?userid=@item.user_id">@item.user_name</a>
+                                                }
+                                            </td>
+                                            <td>@item.user_bed</td>
+                                            <td>@item.staff_name</td>
+                                            <td>@item.pay_type_id.ToString()</td>
+                                            <td>
+                                                @if (item.split_count > 0)
+                                                {
+                                                    <text>Splited by @item.split_count people from order <a href="/kitchen/order?orderid=@(item.splited_order_id == 0 ? item.id:item.splited_order_id)">#@(item.splited_order_id == 0 ? item.id : item.splited_order_id)</a></text>
+                                                }else if (!String.IsNullOrEmpty(item.comment))
+                                                {
+                                                    <text>@item.comment</text>
+                                                }
+                                            </td>
+                                            <td @if (item.is_canceled){ <text>style="color:red;"</text> }>
+                                                @if (item.is_canceled)
+                                                {
+                                                    <text>Canceled -$@item.total</text>
+                                                }
+                                                else
+                                                {
+                                                    @:$@item.total
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                 <tfoot>
+                                    <tr class="total-row">                                        
+                                        <td colspan="8" align="right">$@Model.Sum(x=>x.total).ToString("N0")</td>
+                                    </tr>
+                                    </tfoot>
+                            </table>
+                        </div>                      
+                    </div>
+                </div>
+            </div>            
+        </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        $("#updateReport").click(function () {
+            var from = $("#fromDate").val();
+            var to = $("#toDate").val();
+            window.location = window.location.pathname + "?from=" + from + "&to=" + to;
+        });
+    });
+
+</script>

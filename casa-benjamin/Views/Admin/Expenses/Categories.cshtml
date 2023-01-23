@@ -1,0 +1,129 @@
+﻿@model List<ExpenseCategory>
+@{
+    ViewBag.Title = "ExpenseCategory";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>@I18n.T("Expenses Categories")</h2>
+
+<div class="row">
+    <div class="col-lg-12">
+        <button onclick="addExpenseCategory()" type="button" class="btn btn-success btn-circle-lg waves-effect waves-circle waves-float pull-right">
+            <i class="material-icons">add_circle</i>
+        </button>
+        <button onclick="remove()" type="button" class="btn btn-danger btn-circle-lg waves-effect waves-circle waves-float pull-right">
+            <i class="material-icons">clear</i>
+        </button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="body">
+                <table class="table table-bordered dataTable" data-page-size="100" datatable-search="juan">
+                    <thead>
+                        <tr>
+                            <th width="10">@I18n.T("Id")</th>
+                            <th>@I18n.T("Name")</th>
+                            <th>@I18n.T("Type")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Where(x=> x.id != -1))
+                        { 
+                            <tr>
+                                <td>@item.id</td>
+                                <td>@item.name</td>
+                                <td>
+                                    <select onchange="changeCatType(this,@item.id,'@item.name',@((int)item.expense_category_type))">
+                                       @foreach (ExpenseCategoryType ec in Enum.GetValues(typeof(ExpenseCategoryType)))
+                                       {
+                                           <option @if (ec == item.expense_category_type) {<text>selected="selected" </text>}  value="@((int)ec)">@ec.ToString()</option>
+                                       }
+                                    </select>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+              
+            </div>
+        </div>
+      
+    </div>    
+</div>
+
+<script>
+
+    function changeCatType(el,catId,name,type) {
+        var val = el.options[el.selectedIndex].value;
+        if (parseInt(val) != type) {
+            $.get("/reports/UpdateExpenseCategory?id=" + catId + "&name=" + name + "&expense_category_type=" + val);
+        }
+    }
+
+    function remove() {
+
+        if (!confirm("Are you sure?")) return;
+
+        var table = $('table').DataTable();
+        if (table.row('.selected').length === 0) {
+            alertify.alert("Select a row");
+            return;
+        }
+        var row = table.row('.selected');
+        var id = row.data()[0];
+
+        $.get("/reports/DeleteExpenseCategory?id= " + id);
+
+        row.remove().draw(false);
+    }
+
+    AppEventBus.onDataTableTD(function (table,rowData,tdData,tdIndex) {
+        var that = this;        
+        switch (tdIndex) {
+            case 1:
+                alertify
+                    .defaultValue(tdData)
+                    .prompt("@I18n.T("Enter Name")",
+                    function (val, ev) {
+                        // The click event is in the event variable, so you can use it here.
+                        ev.preventDefault();
+                        $.get("/reports/UpdateExpenseCategory?id=" + rowData[0] + "&name=" + val);
+                        table.cell(that).data(val).draw();
+                       
+                    });
+                break;
+            default:
+                break;
+        }
+
+    });
+
+    function addExpenseCategory() {
+        var table = $("table").DataTable();
+        alertify
+            .defaultValue("")
+            .prompt("@I18n.T("Enter Category Name")",
+            function (val, ev) {
+                // The click event is in the event variable, so you can use it here.
+                ev.preventDefault();
+                $.get("/reports/InsertExpenseCategory?name=" + val).done(function (id) {
+                    table.row.add([
+                        id,
+                        val,
+                        '<select onchange="changeCatType(this,{0},\'{1}\',1)">'
+                            .replace("{0}", id)
+                            .replace("{1}", val) +
+                        '<option value="1">Other</option>' +
+                        '<option value="2">Current</option>' +
+                        '<option value="3">Kitchen</option>' +
+                        '<option value="4">Cleaning</option>' +
+                        '</select>'
+                    ]).draw(false);
+                });               
+
+            });
+    }
+
+</script>

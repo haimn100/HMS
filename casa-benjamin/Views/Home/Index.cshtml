@@ -1,0 +1,149 @@
+﻿ @{Staff user = (Staff)Session["user"]; }
+@section PageScripts{
+    <script src="/js/pages/rooms.js?v=7"></script>
+}
+
+<div>
+    <div ng-controller="RoomsController" ng-cloak>
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="filter-pane clearfix">
+                    <div class="filter-item">
+                        <label>@I18n.T("Room"):</label> <input type="text" ng-model="filter.roomNumber" class="filter-room-number" />
+                    </div>
+                    <div class="filter-item">
+                        <label>@I18n.T("Bed"):</label> <input type="text" ng-model="filter.bedNumber" class="filter-bed-number" />
+                    </div>
+                    <div class="filter-item">
+                        <label>@I18n.T("Guest"):</label> <input type="text" id="users-ac" class="filter-guest" placeholder="@I18n.T("Search guest by name or bed")" />
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="needCleaning" ng-model="filter.needCleaning" ng-disabled="filter.showNonEmptyRooms==true" class="filled-in" />
+                        <label for="needCleaning">@I18n.T("Need Cleaning")</label>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="showNonEmptyRooms" ng-model="filter.showNonEmptyRooms" ng-disabled="filter.needCleaning==true" class="filled-in" />
+                        <label for="showNonEmptyRooms">@I18n.T("Only Occupied Rooms")</label>
+                    </div>
+                    <div class="filter-item">
+                        <i class="material-icons" style="cursor:pointer;" ng-click="printPage()">print</i>
+                    </div>
+                    <div class="sexCount">
+                        <label class="male-number male-color">{{maleCount}}</label><i class="material-icons male-color">person</i>
+                        <i class="material-icons female-color">person</i><label class="female-number female-color">{{femaleCount}}</label>
+                        | <label class="total-number">{{totalCount}}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row clearfix" style="font-size:16px;">
+            <div id="mainContent" class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div ng-repeat="row in roomRows" class="row">
+                    <div ng-repeat="room in row.rooms" class="col-lg-3 col-md-3 col-sm-3 col-xs-6">
+                        <div class="room-container card floor-{{room.room.floor}}-color">
+                            <div ng-if="room.room.room_type_id == 1" class="private-room-indicator">@I18n.T("PRIVATE")</div>
+                            <div ng-if="room.room.room_type_id == 3" class="private-room-indicator">@I18n.T("SUITE")</div>
+                            <div class="header">
+                                <ul class="header-dropdown m-r--5">
+                                    <li class="dropdown">
+                                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                            <i class="material-icons">more_vert</i>
+                                        </a>
+                                        <ul class="dropdown-menu pull-right">
+                                            <li ng-if="!room.room.is_clean_required"><a href="javascript:void(0);" ng-click="assignHouseKeeper(room.room.id)">@I18n.T("Require Cleaning")</a></li>
+                                            <li ng-if="room.room.is_clean_required"><a href="javascript:void(0);" ng-click="unAssignHouseKeeper(room.room.id)">@I18n.T("Mark Cleaned")</a></li>
+                                            <li ng-if="room.room.note == null"><a href="javascript:void(0);" ng-click="addNote(room.room)">@I18n.T("Add Note")</a></li>
+                                            
+                                            @if (user.type != UserType.HouseKeeper)
+                                            {
+                                            <li ng-if="room.room.note !== null"><a href="javascript:void(0);" ng-click="deleteNote(room.room)">@I18n.T("Delete Note")</a></li>
+                                            }
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="room-container-num">
+                                {{room.room.room_number}}
+                            </div>
+
+                            <div class="room-notification-icons">
+                                <div ng-if="room.room.is_clean_required" class="room-info-icon room-container-cleaning">
+                                    <i class="material-icons">toys</i>
+                                </div>
+
+                                <div ng-if="!room.room.is_clean_required && room.room.is_cleaning_inspection_required" class="room-info-icon room-container-cleaning">
+                                    <i class="material-icons" style="color:#000;">toys</i>
+                                </div>
+
+                                <div ng-if="room.room.note !== null" class="room-info-icon room-container-note-icon">
+                                    <i title="<div class='reservation-info'>{{room.room.note}}</div>" data-note="{{room.room.note}}" class="jsTippy material-icons">announcement</i>
+                                </div>
+                            </div>
+
+                            <div ng-repeat="bed in room.beds" class="bed-container">
+
+                                <div ng-if="bed.partner !== undefined">
+
+                                    <i class="{{getDoubleBedIconClass(bed)}}" style="color:{{getDoubleBedColor(bed)}}"></i>
+
+                                    <div ng-if="bed.user !== undefined" ng-click="goToKitchen(bed);" title="Loading..." data-user-name="{{bed.user.name}} {{bed.user.last_name}}" data-user-image="/guestimages/{{bed.user.pic}}" class="bed-container-num double-1 tippy sex-{{bed.user.sex}}-color">{{bed.bed_id}}</div>
+                                    <div ng-if="bed.user === undefined" ng-click="goToCheckIn(bed);" class="bed-container-num double-1">{{bed.bed_id}}</div>
+
+                                    <div ng-if="bed.partner.user !== undefined" ng-click="goToKitchen(bed.partner);" title="Loading..." data-user-name="{{bed.partner.user.name}} {{bed.partner.user.last_name}}" data-user-image="/guestimages/{{bed.partner.user.pic}}" class="bed-container-num double-2 tippy sex-{{bed.partner.user.sex}}-color">{{bed.partner.bed_id}}</div>
+                                    <div ng-if="bed.partner.user === undefined" ng-click="goToCheckIn(bed.partner);" class="bed-container-num double-2">{{bed.partner.bed_id}}</div>
+
+                                </div>
+                                <div ng-if="bed.partner === undefined">
+                                    <button ng-if="bed.user === undefined" type="button" ng-click="goToCheckIn(bed);">
+                                        <i class="{{getBedClass(bed)}}"></i>
+                                        <div class="bed-container-num">{{bed.bed_id}}</div>
+                                    </button>
+                                    <button ng-if="bed.user !== undefined" type="button" class="tippy" ng-click="goToKitchen(bed);" title="Loading..." data-user-name="{{bed.user.name}} {{bed.user.last_name}}" data-user-image="/guestimages/{{bed.user.pic}}">
+                                        <i class="{{getBedClass(bed)}} sex-{{bed.user.sex}}-color"></i>
+                                        <div class="bed-container-num sex-{{bed.user.sex}}-color">{{bed.bed_id}}</div>
+                                    </button>
+                                </div>
+                            </div>
+
+
+                            <div ng-if="room.room.amenitiesDisplay.length > 0" class="room-amenities">
+                                <div class="amenity" ng-repeat="am in room.room.amenitiesDisplay track by $index">
+                                    <img title="{{am.title}}" ng-src="/images/ri{{am.name}}.png" />
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="template" style="display: none;">
+    Loading a new image...
+</div>
+
+<script>
+    window.onload = function () {
+
+        @if (user.type != UserType.HouseKeeper) { 
+
+        <text>
+            $("#mainContent").on("click", ".room-container-note-icon", function() {
+                        var $this = $(this);
+                        var text = $(this).find("i").attr("data-note");
+                        var roomId = $(this).closest(".room-container").find(".room-container-num").text();
+                        roomId = roomId.trim();
+                        var result = prompt("Edit Note", text);
+                        if (result != null) {
+                    $.get("/room/AddNote?roomid=" + roomId + "&note=" + result).always(function() {
+                            $this.find("i").attr("title", "<div class='reservation-info'>" + result + "</div>");
+                            $this.find("i").attr("data-note", result);
+
+                            });
+                        }
+                    });
+            }
+        </text>
+        }
+</script>

@@ -1,0 +1,95 @@
+﻿@model UIUserBill
+@{
+    string dateFormat = "MM/dd/yyyy hh:mm";
+    string redirect = Request.Url.AbsolutePath + "?" + Request.Url.Query;
+}
+
+<div class="center-content">
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <h4>@I18n.T("Orders") | @Model.User.name | @I18n.T("Bed") @Model.User.bed_id</h4>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Order Id")</th>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th>@I18n.T("Item")</th>
+                                <th>@I18n.T("Pay Type")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th style="text-align:right;">@I18n.T("Total")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Orders.Where(x => x.Order.menu_category_type == MenuCategoryType.Kitchen))
+                            {
+                                bool noPay = item.Order.is_canceled || (item.Order.pay_type_id != PayType.Cuenta);
+
+                                foreach (var oi in item.OrderItems)
+                                {
+                                    <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                                        <td><a href="/kitchen/order?orderid=@item.Order.id&redirectto=/guest/bill?userid=@Model.User.id">@item.Order.id</a></td>
+                                        <td>@item.Order.order_date.ToString(dateFormat)</td>
+                                        <td>@item.Order.staff_name</td>
+                                        <td>
+                                            @oi.menu_category_name > @oi.menu_item_name
+                                            @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                                            {
+                                                <br />
+                                                <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                                            }
+                                        </td>
+                                        <td>@item.Order.pay_type_id.ToString()</td>
+
+                                        <td>@oi.comment</td>
+                                        <td align="right">
+                                            @if (item.Order.is_canceled || item.Order.pay_type_id != PayType.Cuenta)
+                                            {
+                                                <text>-$@oi.total.ToString("N0")</text>
+                                            }
+                                            else
+                                            {
+                                                <text>$@oi.total.ToString("N0")</text>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6"></td>
+                                <td class="bill-total">$@Model.OrdersTotal</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    $(document).ready(function () {
+        $(".cancel-order").click(function () {
+
+            if ($("select[name='staff']").val() === "") {
+                alertify.alert("@I18n.T("Choose Employee")");
+                return false;
+            }
+
+            var approve = confirm('@I18n.T("Are you sure?")');
+            if (approve) {
+                $(this).attr("href", $(this).attr("href") + "&staff=" + $("select[name='staff']").val());
+                return true;
+            }
+
+            return false;
+        });
+    });
+</script>

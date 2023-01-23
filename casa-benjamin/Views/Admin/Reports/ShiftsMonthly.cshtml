@@ -1,0 +1,157 @@
+﻿@model List<Shift>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+    var graph = ReportsManager.Instance.GetShifts(new ReportDateQuery
+    {
+        From = DateTime.Now.AddMonths(-5),
+        To = DateTime.Now
+    });
+
+}
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("SHIFTS MONTHLY REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT") 
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToString("MM/yyyy")" /></b>
+            - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToString("MM/yyyy")" /></b>                 
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+</div>
+    <!-- Widgets -->
+    <div class="row clearfix">
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL")</div>
+                    <div class="number">$@Model.Sum(x=>x.shift_total).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CASH")</div>
+                    <div class="number">$@Model.Sum(x => x.shift_total_cash).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CREDIT")</div>
+                    <div class="number">$@Model.Sum(x => x.shift_total_credit).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+       
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-red hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL CACNCELED")</div>
+                    <div class="number">$@Model.Sum(x => x.shift_total_canceled).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- #END# Widgets -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body dataTable-no-header">
+                        <table class="table table-small table-bordered dataTable" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Date")</th>
+                                    <th>@I18n.T("Total Cash")</th>
+                                    <th>@I18n.T("Total Credit")</th>
+                                    <th>@I18n.T("Total Canceled")</th>
+                                    <th>@I18n.T("Total")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.shift_date.ToString("MM/yyyy")</td>
+                                        <td>$@item.shift_total_cash.ToString("N0")</td>
+                                        <td>$@item.shift_total_credit.ToString("N0")</td>
+                                        <td>$@item.shift_total_canceled.ToString("N0")</td>
+                                        <td>$@item.shift_total.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td></td>
+                                    <td>$@Model.Sum(x => x.shift_total_cash).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.shift_total_credit).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.shift_total_canceled).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.shift_total).ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                    </table>                      
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="timeGraph" class="lg-graph"></div>
+            </div>
+        </div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        var shiftGraph = @Html.Raw(Json.Encode(graph));
+        var highchartsData = [];
+        for (var i = 0; i < shiftGraph.length; i++) {
+            var date = shiftGraph[i].shift_date;
+            date = parseFloat(date.substring(6).replace(")/", ""));
+            date = new Date(date);
+            date = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+            highchartsData.push([date, shiftGraph[i].shift_total]);
+        }
+
+        ChartHelper.timeGraph("timeGraph", "Shifts Over Time", [{ name: "Total Revenue", data: highchartsData }],
+            {
+                xTitle: null,
+                yTitle: null,
+                subtitle: "@I18n.T("Last 6 Months")",
+                dateTimeLabelFormats: {
+                    month: '%B'
+                },
+                tooltip: {
+                    headerFormat: '<b>{point.x:%e. %b} @I18n.T("Revenue"): </b><br>',
+                    pointFormat: ' ${point.y}'
+                }
+            })
+      
+        $("#updateReport").click(function () {
+                var from = $("#fromDate").val();
+                var to = $("#toDate").val();
+                window.location = "/reports/MonthlyShifts?from=" + from + "&to=" + to;
+            });
+
+        });
+
+</script>

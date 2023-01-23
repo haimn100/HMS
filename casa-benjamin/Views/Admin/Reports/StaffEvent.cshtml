@@ -1,0 +1,101 @@
+﻿@model List<StaffEvent>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">@I18n.T("STAFF EVENT REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("DAILY REPORT")
+            <b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b>           
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+
+    <!-- Widgets -->
+    <div class="row clearfix">
+        <div class="col-lg-6 col-sm-6 col-xs-12">
+            <div class="info-box bg-cyan hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">person_outline</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("MOVED BEDS")</div>
+                    <div class="number">@Model.Count(x => x.event_type_id == EventType.MovedBed).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-sm-6 col-xs-12">
+            <div class="info-box bg-red hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">kitchen</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("CANCELED ORDERS/ITEMS")</div>
+                    <div class="number">@Model.Count(x=>x.event_type_id == EventType.CanceledOrder || x.event_type_id == EventType.RemovedOrderItem).ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+  
+</div>
+<!-- #END# Widgets -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body dataTable-no-header">
+                    <table class="table table-small dataTable" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Employee Id")</th>
+                                <th>@I18n.T("Employee Name")</th>
+                                <th>@I18n.T("Guest Id")</th>
+                                <th>@I18n.T("Event")</th>
+                                <th>@I18n.T("Description")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.event_date.ToShortUIDateTimeString()</td>
+                                    <td>@item.staff_id</td>
+                                    <td>@item.staff_name</td>
+                                    <td><a href="/guest/user_profile?userid=@item.guest_id">@item.guest_id</a></td>
+                                    <td>@item.event_type_id.ToString()</td>
+                                    <td>
+                                        @switch (item.event_type_id)
+                                        {
+                                            case EventType.MovedBed:
+                                                <text>@I18n.T("Moved Guest To Bed") @item.event_value</text>
+                                                break;
+                                            case EventType.CanceledOrder:
+                                                <text>@I18n.T("Canceled Order Number") <a href="/kitchen/order?orderid=@item.event_value">@item.event_value</a></text>
+                                                break;
+                                            case EventType.RemovedOrderItem:
+                                                <text>@I18n.T("Canceled Order Item From Order") <a href="/kitchen/order?orderid=@item.event_value">@item.event_value</a></text>
+                                                break;
+                                        }
+
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#updateReport").click(function () {
+        var from = $("#fromDate").val();
+        var to = $("#toDate").val();
+        window.location = "/reports/StaffEvents?from=" + from + "&to=" + to;
+    });
+</script>

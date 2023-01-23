@@ -1,0 +1,1154 @@
+﻿@model UIUserBill
+@{
+    CheckOut co = ViewBag.CheckOut == null ? null : (CheckOut)ViewBag.CheckOut;
+}
+<div class="center-content no-print">
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <h4 style="margin-bottom: 20px;text-align: center;">@Model.User.name - @Model.User.last_name @I18n.T("Bill")</h4>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <table class="table" border="0">
+
+                                <tr>
+                                    <td align="right" style="border:0 none;">
+                                        <small>@I18n.T("Sub Total"): </small><span style="font-size:1em;font-weight:bold;" class="subtotal-bill">$@Model.SubTotal.ToString("N0")</span><br />
+                                        @if (Model.DiscountTotal > 0)
+                                        {
+                                            <small>@I18n.T("Discount"): </small><span style="font-size:1em;color:red;font-weight:bold;">-$@Model.DiscountTotal.ToString("N0")</span><br />
+                                        }
+                                        @if (Model.Deposits != null && Model.Deposits.Count > 0)
+                                        {
+                                            <small>@I18n.T("Deposit"): </small><span style="font-size:1em;color:red;font-weight:bold;">-$@Model.Deposits.Sum(x => x.amount).ToString("N0")</span><br />
+                                        }
+                                        @if (Model.User.is_checked_out && co.credit_charge_amount > 0)
+                                        {
+                                            <div class="addChargeToCredit"><small>@I18n.T("Credit Extra Charge"): </small><span style="font-size:1em;font-weight:bold;" class="amount">@co.credit_charge_amount.ToString("N0")</span></div>
+                                        }
+                                        else
+                                        {
+                                            <div class="addChargeToCredit" style="display:none;"><small>@I18n.T("Credit Extra Charge"): </small><span style="font-size:1em;font-weight:bold;" class="amount"></span></div>
+                                        }
+                                        <small>@I18n.T("Total"): </small><span style="font-size:1em;font-weight:bold;" class="total-bill">$@Model.Total.ToString("N0")</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="border:0 none;">
+
+                                        <div style="border-top:1px solid #ccc;padding-top:15px;text-align:right;">
+                                            <div class="clearfix">
+
+                                                @if (!Model.User.is_checked_out)
+                                                {
+                                                    <label for="radiocredit">@I18n.T("Credit")</label>
+                                                    <input id="radiocredit" @{ if (Model.Total <= 0) { <text>readonly</text> } } type="number" name="totalcredit" min="0" value="0" />
+                                                    <label for="radiocash">@I18n.T("Cash")</label>
+                                                    <input @{ if (Model.Total <= 0) { <text>readonly</text> } } id="radiocash" type="number" name="totalcash" min="0" value="0" />
+                                                    <div style="display:inline-block;width:200px;">
+                                                        <select id="staff" class="select2" placeholder="@I18n.T("Employee")">
+                                                            <option></option>
+                                                            @foreach (var item in UserManager.Instance.GetStaff(true))
+                                                            {
+                                                                <option value="@item.id">@item.name</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                }
+
+                                                @if (!Model.User.is_checked_out)
+                                                {
+                                                    <div class="clearfix">
+                                                        <div style="width:60px;" class="pull-right">
+                                                            <div class="input-group input-group-sm" style="margin-bottom:0">
+                                                                <span class="input-group-addon">%</span>
+                                                                <div class="form-line">
+                                                                    <input type="number" min="0" value="5" id="creditcharge" class="form-control">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <small class="pull-right" style="margin-top: 16px;margin-right: 10px;">@I18n.T("Credit Card Use Charge"):</small>
+
+                                                    </div>
+                                                    <div id="creditChargeInfo" style="display:none;">
+                                                        <small style="font-style:italic;">@I18n.T("Amount for extra charge"):</small> $<small id="amountToCharge">0</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div style="margin-top:15px;">
+                                                @if (!Model.User.is_checked_out)
+                                                {
+                                                    <button type="button" class="btn bg-green" data-toggle="modal" data-target="#addDepositModal" data-backdrop="false">
+                                                        @I18n.T("Add Deposit")
+                                                    </button>
+                                                    <button type="button" class="btn bg-green" data-toggle="modal" data-target="#addDiscountModal" data-backdrop="false">
+                                                        @I18n.T("Add Discount")
+                                                    </button>
+                                                }
+                                                <button onclick="window.print();" style="margin-left:10px;" type="button" class="btn bg-red">
+                                                    @I18n.T("Print Bill")
+                                                </button>
+                                                <button onclick="printReciept();" style="margin-left:10px;" type="button" class="btn bg-red">
+                                                    @I18n.T("Print Reciept")
+                                                </button>
+                                                @if (!Model.User.is_checked_out)
+                                                {
+                                                    <a onclick="checkOut();" href="javascript:void(0);" style="margin-left:10px;" type="button" class="btn bg-red waves-effect waves-float">
+                                                        @I18n.T("Check Out")
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (Model.Discounts.Count > 0)
+                    {
+                        <h4>@I18n.T("Discounts")</h4>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Date")</th>
+                                    <th>@I18n.T("Comment")</th>
+                                    <th>@I18n.T("Employee")</th>
+                                    <th>@I18n.T("Payment Type")</th>
+                                    <th>@I18n.T("Price")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Discounts)
+                                {
+                                    <tr>
+                                        <td>@item.discount_date.ToShortUIDateTimeString()</td>
+                                        <td>@item.comment</td>
+                                        <td>@item.staff</td>
+                                        <td>@item.payment_type_id.ToString()</td>
+                                        <td align="right" style="color:red;">-$@item.price</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4"></td>
+                                    <td class="bill-total" style="color:red;">-$@Model.DiscountTotal.ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+
+                    @if (Model.Deposits != null && Model.Deposits.Count > 0)
+                    {
+                        <h4>@I18n.T("Deposit")</h4>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Date")</th>
+                                    <th>@I18n.T("Payment Type")</th>
+                                    <th>@I18n.T("Employee")</th>
+                                    <th>@I18n.T("Comment")</th>
+                                    <th align="right">@I18n.T("CreditCard Fee")</th>
+                                    <th align="right">@I18n.T("Amount")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var deposit in Model.Deposits)
+                                {
+                                <tr @if (!Model.User.is_checked_out) { <text> onclick="updateDeposit(@deposit.ToJSON())" </text> }>
+                                    <td>@deposit.prepay_date.ToShortUIDateTimeString()</td>
+                                    <td>
+                                        @{
+                                            if (deposit.pay_type == PayType.Cash)
+                                            {
+                                                <text>@I18n.T("Cash")</text>
+                                            }
+                                            else
+                                            {
+                                                <text>@I18n.T("Credit")</text>
+                                            }
+                                        }
+                                    </td>
+                                    <td>@deposit.staff</td>
+                                    <td>@deposit.comment</td>
+                                    <td align="right">$@deposit.deposit_credit_card_charge.ToString("N0")</td>
+                                    <td align="right">$@deposit.amount.ToString("N0")</td>
+                                </tr>
+                                }
+
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4"></td>
+                                    <td class="bill-total">$@Model.Deposits.Sum(x => x.deposit_credit_card_charge).ToString("N0")</td>
+                                    <td class="bill-total">$@Model.Deposits.Sum(x => x.amount).ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+
+                    <h4>@I18n.T("Accommodation")</h4>
+                    <table class="table table-bordered" style="margin-bottom:0;">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Start")</th>
+                                <th>@I18n.T("End")</th>
+                                <th>@I18n.T("Bed")</th>
+                                <th>@I18n.T("Room")</th>
+                                <th>@I18n.T("Total Night")</th>
+                                <th>@I18n.T("Price/Night")</th>
+                                <th>@I18n.T("Total")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Rooms)
+                            {
+                                <tr>
+                                    <td>@item.StartDate.ToShortUIDateString()</td>
+                                    <td>
+                                        @{ if (item.EndDate.HasValue)
+                                            { <text>@item.EndDate.Value.ToShortUIDateString()</text> }
+                                        }
+                                    </td>
+                                    <td>@item.BedId</td>
+                                    <td>@item.RoomNumber</td>
+                                    <td>@item.Nights</td>
+                                    <td>$@item.Price.ToString("N0")</td>
+                                    <td style="text-align:right;">
+                                        @{ var s = item.Price * item.Nights;}
+                                        $@s.ToString("N0")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6"></td>
+                                <td class="bill-total">$@Model.RoomTotal.ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <small>* <b>check in:</b> @Model.UserBeds.First().start_date.ToShortUIDateTimeString() | <b>check out:</b> @Model.UserBeds.Last().end_date.Value.ToShortUIDateTimeString()</small>
+
+                    <h4>@I18n.T("Kitchen")</h4>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Order Id")</th>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th>@I18n.T("Item")</th>
+                                <th>@I18n.T("Pay Type")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th style="text-align:right;">@I18n.T("Total")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Orders.Where(x => x.Order.menu_category_type == MenuCategoryType.Kitchen).OrderByDescending(x => x.Order.order_date))
+                            {
+                                bool noPay = item.Order.is_canceled || (item.Order.pay_type_id != PayType.Cuenta);
+
+                                if (item.SplitedByUserId > 0 && item.SplitedByUserId != Model.User.id)
+                                {
+                                    <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                                        <td><a href="/kitchen/order?orderid=@item.Order.id&redirectto=/guest/bill?userid=@Model.User.id">@item.Order.id</a></td>
+                                        <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                                        <td>@item.Order.staff_name</td>
+                                        <td>@I18n.T("Splited from user") <a href="/guest/userprofile?userid=@item.SplitedByUserId">@item.SplitedByUserName</a></td>
+                                        <td>@item.Order.pay_type_id.ToString()</td>
+                                        <td></td>
+                                        <td align="right">
+                                            @if (item.Order.is_canceled)
+                                            {
+                                                <text>@I18n.T("Canceled")</text>
+                                            }
+
+                                            @if (item.Order.discount > 0)
+                                            {
+                                                if (item.OrderItems.Count > 0)
+                                                {
+                                                    @:$@(item.Order.total - (item.Order.discount / item.OrderItems.Count))
+                                                }
+                                                else
+                                                {
+                                                    @:$@(item.Order.total - (item.Order.discount))
+                                                }
+                                            }
+                                            else
+                                            {
+                                                @:$@item.Order.total.ToString("N0")
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+
+                                foreach (var oi in item.OrderItems)
+                                {
+                                    <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                                        <td><a href="/kitchen/order?orderid=@item.Order.id&redirectto=/guest/bill?userid=@Model.User.id">@item.Order.id</a></td>
+                                        <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                                        <td>@item.Order.staff_name</td>
+                                        <td>
+                                            @oi.menu_category_name > @oi.menu_item_name
+                                            @if (item.Order.split_total > 0)
+                                            {
+                                                <text> <small>(@I18n.T("splited"))</small></text>
+                                            }
+                                            @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                                            {
+                                                <br />
+                                                <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                                            }
+                                        </td>
+                                        <td>@item.Order.pay_type_id.ToString()</td>
+
+                                        <td>
+                                            @oi.comment
+                                            @if (item.Order.discount > 0)
+                                            {
+                                                <text><span style="color:red;">@I18n.T("Discount") $@(item.Order.discount / item.OrderItems.Count)</span></text>
+                                            }
+                                        </td>
+                                        <td align="right">
+
+                                            @if (item.Order.is_canceled)
+                                            {
+                                                <text>@I18n.T("Canceled")</text>
+                                            }
+
+                                            @if (item.Order.discount > 0)
+                                            {
+                                                @:$@(oi.total - (item.Order.discount / item.OrderItems.Count))
+                                            }
+                                            else
+                                            {
+                                                @:$@oi.total.ToString("N0")
+                                            }
+
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6"></td>
+                                <td class="bill-total">$@Model.KitchenTotal.ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    @if (Model.Orders.Exists(x => x.Order.menu_category_type == MenuCategoryType.Service))
+                    {
+                        <h4>@I18n.T("Services")</h4>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Order Id")</th>
+                                    <th>@I18n.T("Date")</th>
+                                    <th>@I18n.T("Employee")</th>
+                                    <th>@I18n.T("Item")</th>
+                                    <th>@I18n.T("Pay Type")</th>
+                                    <th>@I18n.T("Comment")</th>
+                                    <th style="text-align:right;">@I18n.T("Total")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Orders.Where(x => x.Order.menu_category_type == MenuCategoryType.Service))
+                                {
+                                    bool noPay = item.Order.is_canceled || (item.Order.pay_type_id != PayType.Cuenta);
+
+                                    foreach (var oi in item.OrderItems)
+                                    {
+                                        <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                                            <td><a href="/kitchen/order?orderid=@item.Order.id&redirectto=/guest/bill?userid=@Model.User.id">@item.Order.id</a></td>
+                                            <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                                            <td>@item.Order.staff_name</td>
+                                            <td>
+                                                @oi.menu_category_name > @oi.menu_item_name
+                                                @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                                                {
+                                                    <br />
+                                                    <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                                                }
+                                            </td>
+                                            <td>@item.Order.pay_type_id.ToString()</td>
+
+                                            <td>@oi.comment</td>
+                                            <td align="right">
+                                                @if (item.Order.is_canceled)
+                                                {
+                                                    <text>@I18n.T("Canceled")</text>
+                                                }
+
+                                                @if (item.Order.discount > 0)
+                                                {
+                                                    @:$@(oi.total - (item.Order.discount / item.OrderItems.Count))
+                                                }
+                                                else
+                                                {
+                                                    @:$@oi.total.ToString("N0")
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6"></td>
+                                    <td class="bill-total">$@Model.ServicesTotal.ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#radiocredit,#creditcharge").bind("input", function (ev) {
+ 
+        var val = $("#radiocredit").val();
+        var percent = $("#creditcharge").val();
+        var originalTotal = @Model.Total;
+        var originalSubTotal = @Model.SubTotal;
+
+
+        if (val != 0 && percent && percent != 0) {
+
+            var charge = parseFloat(val) * (parseFloat($("#creditcharge").val()) / 100);
+            $("#amountToCharge").text(charge.toFixed(0));
+            $("#creditChargeInfo").show();
+
+            var total = originalTotal + charge;
+
+            $(".total-bill").text(numeral(total).format('$0,0'));
+            $(".addChargeToCredit .amount").text(numeral(charge).format('$0,0'));
+            $(".addChargeToCredit").show();
+        } else {
+
+            $("#creditChargeInfo").hide();
+            $(".addChargeToCredit").hide();
+
+            $(".total-bill").text(numeral(originalTotal).format('$0,0'));
+            $(".addChargeToCredit .amount").text('$0').hide();
+        }
+    });
+
+    function checkOut() {
+
+
+
+        var uid = @Model.User.id;
+        var grandTotal = @Model.Total;
+
+        var staff = $("select").val();
+        var totalCash = parseInt($("input[name='totalcash']").val());
+        var totalCredit = parseInt($("input[name='totalcredit']").val());
+        var creditChargePercentage = $("#creditcharge").val();
+
+        if (totalCredit < 0 || totalCash < 0) {
+            alert('Cash Or Credit cannot be negative');
+            return;
+        }
+
+        if (grandTotal > 0) {
+            if (totalCash + totalCredit !== grandTotal) {
+                alert("@I18n.T("Cash And Credit are not Equal to Grand Total")");
+                return;
+            }
+        }
+        
+
+        if (staff.length === 0) {
+            alertify.alert("@I18n.T("Select Employee")");
+            return;
+        }
+
+        if (!confirm("@Html.Raw(I18n.T("Are you sure?"))")) return;
+
+        window.print();
+        window.location = "/guest/checkout?userid=" + uid + "&staff=" + staff + "&totalcash=" + totalCash + "&totalcredit=" + totalCredit + "&creditChargePercentage=" + creditChargePercentage;
+    }
+
+    function updatePayment() {
+
+         var uid = @Model.User.id;
+         var grandTotal = @Model.Total;
+
+        var staff = $("select").val();
+        var totalCash = $("input[name='totalcash']").val();
+        var totalCredit = $("input[name='totalcredit']").val();
+
+         if (parseInt(totalCash) + parseInt(totalCredit) !== grandTotal) {
+             alert("Cash And Credit are not Equal to Grand Total");
+             return;
+         }
+
+        if (staff.length === 0) {
+            alertify.alert("Select Employee");
+            return;
+        }
+
+        window.location = "/guest/UpdateCheckoutPayment?userid=" + uid + "&staff=" + staff + "&totalcash=" + totalCash + "&totalcredit=" + totalCredit;
+    }
+
+    function printReciept() {
+         var printHtml = $("#reciept").html();
+         var printTemp = $(".print").html();
+         $(".print").html(printHtml);
+         window.print();
+         $(".print").html(printTemp);
+     }
+
+    function deleteDeposit() {
+         if (!confirm("@I18n.T("Are you sure?")")){
+             return false;
+         }
+
+         var $modal = $("#updateDepositModal");
+         var staffId = $modal.find("select[name='staffid'] option:selected").val();
+         var id = $modal.find("input[name='id']").val();
+
+         if (_.isUndefined(staffId) || staffId.length === 0) {
+             alert("@I18n.T("Select Employee")");
+             return false;
+         }
+
+         $.ajax({
+             url: "/guest/RemovePrePayment?id=" + id + "&staffid=" + staffId,
+             async: false
+            })
+             .always(function () {
+                 window.location.reload();
+             });
+
+         return false;
+
+     }
+
+    function updateDeposit(deposit) {
+        var $modal = $("#updateDepositModal");
+        $modal.find("input[name='user_id']").val(deposit.user_id);
+        $modal.find("input[name='pay_type']").val(deposit.pay_type);
+        $modal.find("input[name='id']").val(deposit.id);
+        $modal.find("input[name='amount']").val(deposit.amount);
+        $modal.find("input[name='comment']").val(deposit.comment);
+
+        $modal.modal("toggle");
+    }
+</script>
+
+<div id="reciept" class="hidden">
+    <table style="width:100%">
+        <tr>
+            <td>
+                <img src="/images/bill-logo.png" class="bill-logo" />
+            </td>
+            <td align="center" valign="top">
+                @Html.Raw(CacheManager.Instance.AppSettings.hotel_print_info)
+            </td>
+            <td></td>
+        </tr>
+    </table>
+
+    <h3>@I18n.T("Guest Details")</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@I18n.T("Name")</th>
+                <th>@I18n.T("Passport")</th>
+                <th>@I18n.T("Nationality")</th>
+            </tr>
+        </thead>
+        <tr>
+            <td>@Model.User.name @Model.User.last_name</td>
+            <td>@Model.User.passport</td>
+            <td>@Model.User.nationality</td>
+        </tr>
+    </table>
+    <h3>@I18n.T("Guest Bill")</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@I18n.T("Kitchen")</th>
+                <th>@I18n.T("Services")</th>
+                <th>@I18n.T("Accomodation")</th>
+                <th>@I18n.T("Credit Extra Charge")</th>
+                <th>@I18n.T("Discount")</th>
+                <th>@I18n.T("Total")</th>
+            </tr>
+        </thead>
+        <tr>
+            <td>$@Model.KitchenTotal.ToString("N0")</td>
+            <td>$@Model.ServicesTotal.ToString("N0")</td>
+            <td>$@Model.RoomTotal.ToString("N0")</td>
+            <td class="addChargeToCredit"><span class="amount">$0</span></td>
+            <td>$@Model.DiscountTotal.ToString("N0")</td>
+            <td class="total-bill">$@Model.Total.ToString("N0")</td>
+        </tr>
+    </table>
+</div>
+
+<div class="print">
+    <table style="width:100%">
+        <tr>
+            <td>
+                <img src="/images/bill-logo.png" class="bill-logo" />
+            </td>
+            <td align="center" valign="top">
+                @Html.Raw(CacheManager.Instance.AppSettings.hotel_print_info)
+            </td>
+            <td></td>
+        </tr>
+    </table>
+
+    <p></p>
+    <h4 style="margin-bottom: 20px;text-align:center;">@Model.User.name @Model.User.last_name - Bill</h4>
+    <h4>@I18n.T("Accommodation")</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>@I18n.T("Start")</th>
+                <th>@I18n.T("End")</th>
+                <th>@I18n.T("Bed")</th>
+                <th>@I18n.T("Room")</th>
+                <th>@I18n.T("Total Night")</th>
+                <th>@I18n.T("Price/Night")</th>
+                <th style="text-align:right;">@I18n.T("Total")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Rooms)
+            {
+                <tr>
+                    <td>@item.StartDate.ToShortUIDateString()</td>
+                    <td>
+                        @{ if (item.EndDate.HasValue)
+                            { <text>@item.EndDate.Value.ToShortUIDateString()</text> }
+                        }
+                    </td>
+                    <td>@item.BedId</td>
+                    <td>@item.RoomNumber</td>
+                    <td>@item.Nights</td>
+                    <td>$@item.Price</td>
+                    <td style="text-align:right;">
+                        @{ var s = item.Price * item.Nights;}
+                        $@s.ToString("N0")
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6"></td>
+                <td class="bill-total">$@Model.RoomTotal</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h4>@I18n.T("Kitchen")</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>@I18n.T("Order Id")</th>
+                <th>@I18n.T("Date")</th>
+                <th>@I18n.T("Employee")</th>
+                <th>@I18n.T("Item")</th>
+                <th>@I18n.T("Pay Type")</th>
+                <th>@I18n.T("Comment")</th>
+                <th style="text-align:right;">@I18n.T("Total")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Orders.Where(x => x.Order.menu_category_type == MenuCategoryType.Kitchen).OrderByDescending(x => x.Order.order_date))
+            {
+                bool noPay = item.Order.is_canceled || (item.Order.pay_type_id != PayType.Cuenta);
+
+                if (item.SplitedByUserId > 0 && item.SplitedByUserId != Model.User.id)
+                {
+                    <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                        <td><a href="/kitchen/order?orderid=@item.Order.id&redirectto=/guest/bill?userid=@Model.User.id">@item.Order.id</a></td>
+                        <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                        <td>@item.Order.staff_name</td>
+                        <td>@I18n.T("Splited from user") <a href="/guest/userprofile?userid=@item.SplitedByUserId">@item.SplitedByUserName</a></td>
+                        <td>@item.Order.pay_type_id.ToString()</td>
+                        <td></td>
+                        <td align="right">
+                            @if (item.Order.is_canceled || item.Order.pay_type_id != PayType.Cuenta)
+                            {
+                                if (item.Order.is_canceled)
+                                {
+                                    <text>Canceled</text>
+                                }
+                                <text>-$@item.Order.total.ToString("N0")</text>
+                            }
+                            else
+                            {
+                                <text>$@item.Order.total.ToString("N0")</text>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                foreach (var oi in item.OrderItems)
+                {
+                    <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                        <td><a href="/kitchen/order?orderid=@item.Order.id&redirectto=/guest/bill?userid=@Model.User.id">@item.Order.id</a></td>
+                        <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                        <td>@item.Order.staff_name</td>
+                        <td>
+                            @oi.menu_category_name > @oi.menu_item_name
+                            @if (item.Order.split_total > 0)
+                            {
+                                <text> <small>(@I18n.T("splited"))</small></text>
+                            }
+                            @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                            {
+                                <br />
+                                <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                            }
+                        </td>
+                        <td>@item.Order.pay_type_id.ToString()</td>
+
+                        <td>
+                            @oi.comment
+                            @if (item.Order.discount > 0)
+                            {
+                                <text><span style="color:red;">@I18n.T("Discount") $@(item.Order.discount / item.OrderItems.Count)</span></text>
+                            }
+                        </td>
+                        <td align="right">
+                           
+                                @if (item.Order.is_canceled)
+                                {
+                                    <text>@I18n.T("Canceled")</text>
+                                }
+
+                                @if (item.Order.discount > 0)
+                                {
+                                    @:$@(oi.total - (item.Order.discount / item.OrderItems.Count))
+                                }
+                                else
+                                {
+                                    @:$@oi.total.ToString("N0")
+                                }
+                            
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6"></td>
+                <td class="bill-total">$@Model.KitchenTotal.ToString("N0")</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    @if (Model.Orders.Exists(x => x.Order.menu_category_type == MenuCategoryType.Service))
+    {
+        <h4>@I18n.T("Services")</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>@I18n.T("Date")</th>
+                    <th width="80">@I18n.T("Employee")</th>
+                    <th width="25%">@I18n.T("Item")</th>
+                    <th width="60">@I18n.T("Pay Type")</th>
+                    <th>@I18n.T("Comment")</th>
+                    <th width="80" style="text-align:right;">@I18n.T("Total")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Orders.Where(x => x.Order.menu_category_type == MenuCategoryType.Service))
+                {
+                    bool noPay = item.Order.is_canceled || (item.Order.pay_type_id != PayType.Cuenta);
+
+                    foreach (var oi in item.OrderItems)
+                    {
+                        <tr class="order-no-pay-@noPay.ToString().ToLower()">
+                            <td>@item.Order.order_date.ToShortUIDateTimeString()</td>
+                            <td>@item.Order.staff_name</td>
+                            <td>
+                                `
+                                @oi.menu_category_name > @oi.menu_item_name
+                                @if (!string.IsNullOrEmpty(oi.menu_item_ingredients))
+                                {
+                                    <br />
+                                    <small class="ingredients">@oi.menu_item_ingredients.TrimEnd(',')</small>
+                                }
+                            </td>
+                            <td>@item.Order.pay_type_id.ToString()</td>
+
+                            <td>@oi.comment</td>
+                            <td align="right">
+                                 @if (item.Order.is_canceled)
+                                {
+                                    <text>@I18n.T("Canceled")</text>
+                                }
+
+                                @if (item.Order.discount > 0)
+                                {
+                                    @:$@(oi.total - (item.Order.discount / item.OrderItems.Count))
+                                }
+                                else
+                                {
+                                    @:$@oi.total.ToString("N0")
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5"></td>
+                    <td class="bill-total">$@Model.ServicesTotal.ToString("N0")</td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+
+    @if (Model.Discounts.Count > 0)
+    {
+        <h4>@I18n.T("Discounts")</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>@I18n.T("Date")</th>
+                    <th>@I18n.T("Comment")</th>
+                    <th>@I18n.T("Employee")</th>
+                    <th>@I18n.T("Payment Type")</th>
+                    <th>@I18n.T("Price")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Discounts)
+                {
+                    <tr>
+                        <td>@item.discount_date.ToShortUIDateTimeString()</td>
+                        <td>@item.comment</td>
+                        <td>@item.staff</td>
+                        <td>@item.payment_type_id.ToString()</td>
+                        <td align="right" style="color:red;">-$@item.price</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4"></td>
+                    <td class="bill-total" style="color:red;">-$@Model.DiscountTotal.ToString("N0")</td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+
+    @if (Model.Deposits != null && Model.Deposits.Count > 0)
+    {
+        <h4>@I18n.T("Deposit")</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>@I18n.T("Date")</th>
+                    <th>@I18n.T("Payment Type")</th>
+                    <th>@I18n.T("Employee")</th>
+                    <th>@I18n.T("Comment")</th>
+                    <th align="right">@I18n.T("Amount")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var deposit in Model.Deposits)
+                {
+                    <tr>
+                        <td>@deposit.prepay_date.ToShortUIDateTimeString()</td>
+                        <td>
+                            @{
+                                if (deposit.pay_type == PayType.Cash)
+                                {
+                                    <text>@I18n.T("Cash")</text>
+                                }
+                                else
+                                {
+                                    <text>@I18n.T("Credit")</text>
+                                }
+                            }
+                        </td>
+                        <td>@deposit.staff</td>
+                        <td>@deposit.comment</td>
+                        <td align="right" style="color:red;">-$@deposit.amount.ToString("N0")</td>
+                    </tr>
+                }
+
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4"></td>
+                    <td class="bill-total" style="color:red;">-$@Model.Deposits.Sum(x => x.amount).ToString("N0")</td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+
+    <table class="table" border="0">
+        <tr>
+            <td align="right" style="border:0 none;">
+                <small>@I18n.T("Sub Total"): </small><span style="font-size:1em;font-weight:bold;" class="subtotal-bill">$@Model.SubTotal.ToString("N0")</span><br />
+                @if (Model.DiscountTotal > 0)
+                {
+                    <small>@I18n.T("Discount"): </small><span style="font-size:1em;color:red;font-weight:bold;">-$@Model.DiscountTotal.ToString("N0")</span><br />
+                }
+                @if (Model.Deposits != null && Model.Deposits.Count > 0)
+                {
+                    <small>@I18n.T("Deposit"): </small><span style="font-size:1em;color:red;font-weight:bold;">-$@Model.Deposits.Sum(x => x.amount).ToString("N0")</span><br />
+                }
+                @if (Model.User.is_checked_out && co.credit_charge_amount > 0)
+                {
+                    <div class="addChargeToCredit"><small>@I18n.T("Credit Extra Charge"): </small><span style="font-size:1em;font-weight:bold;" class="amount">@co.credit_charge_amount.ToString("N0")</span></div>
+                }
+                else
+                {
+                    <div class="addChargeToCredit" style="display:none;"><small>@I18n.T("Credit Extra Charge"): </small><span style="font-size:1em;font-weight:bold;" class="amount"></span></div>
+                }
+                <small>@I18n.T("Total"): </small><span style="font-size:1em;font-weight:bold;" class="total-bill">$@Model.Total.ToString("N0")</span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="modal fade" id="addDepositModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="depositForm" action="/guest/AddPrePayment" method="post">
+                <input type="hidden" name="user_id" value="@Model.User.id" />
+                <input type="hidden" id="deposit_credit_card_charge" name="deposit_credit_card_charge" value="0" />
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">@I18n.T("Deposit")</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td><label>@I18n.T("Employee"):</label></td>
+                                <td>
+                                    <select name="staffid" required class="select2" placeholder="Employee">
+                                        <option></option>
+                                        @foreach (var item in UserManager.Instance.GetStaff(true))
+                                        {
+                                            <option value="@item.id">@item.name</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Amount"):</label></td>
+                                <td>
+                                    <input id="depositAmount" type="number" min="1" name="amount" value="0" required />
+                                    &nbsp;<small id="depositExtraCredit" style="display:none;"></small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Pay Type"):</label></td>
+                                <td>
+                                    <input type="radio" name="pay_type" id="credit" value="2" class="with-gap radio-col-red" />
+                                    <label for="credit">@I18n.T("Credit")</label>
+                                    <input checked="checked" type="radio" name="pay_type" id="cash" value="3" class="with-gap radio-col-red" />
+                                    <label for="cash">@I18n.T("Cash")</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Comment"):</label></td>
+                                <td>
+                                    <input type="text" style="width:100%;" name="comment" placeholder="@I18n.T("Optional")" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <script>
+                        $("input#credit").click(function () {
+                            $("#depositExtraCredit").css("display", "inline");
+                            var val = Number($("#depositAmount").val());
+                                val += (val * 0.05);
+                                $("#depositExtraCredit").html("+ 5% (" + val + "$)");
+                        });
+                        $("input#cash").click(function () { $("#depositExtraCredit").css("display", "none"); });
+                        $("#depositAmount").keyup(function () {
+        
+                            if ($("input#credit").is(":checked")) {
+                                var val = Number($("#depositAmount").val());
+                                val += Math.round((val * 0.05));
+                                $("#depositExtraCredit").html("+ 5% (" + val + "$)");
+                            }
+                        });
+                        $("#depositForm").submit(function () {
+
+                            if ($("input#credit").is(":checked")) {
+                                var val = Number($("#depositAmount").val());
+                                var creditCardCharge = Math.round((val * 0.05));
+                                $("#deposit_credit_card_charge").val(creditCardCharge);
+                                $("#depositAmount").val(val);
+                            }
+
+                            $(this).find(':submit').attr('disabled', 'disabled');
+
+                            return true;
+                        });
+                    </script>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">@I18n.T("Save changes")</button>
+                </div>
+            </form>
+
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="updateDepositModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <form action="/guest/UpdatePrePayment" method="post">
+                <input type="hidden" name="user_id" value="" />
+                <input type="hidden" name="id" value="" />
+                <input type="hidden" name="pay_type" value="" />
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">@I18n.T("Deposit")</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td><label>@I18n.T("Employee"):</label></td>
+                                <td>
+                                    <select name="staffid" required class="select2" placeholder="Employee">
+                                        <option></option>
+                                        @foreach (var item in UserManager.Instance.GetStaff(true))
+                                        {
+                                            <option value="@item.id">@item.name</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Amount"):</label></td>
+                                <td>
+                                    <input type="number" min="1" name="amount" value="" required />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Comment"):</label></td>
+                                <td>
+                                    <input type="text" style="width:100%;" name="comment" value="" placeholder="@I18n.T("Optional")" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">@I18n.T("Close")</button>
+                    <button type="submit" class="btn btn-primary">@I18n.T("Save")</button>
+                    <button type="submit" class="btn btn-primary bg-red" onclick="deleteDeposit();return false;">@I18n.T("Delete")</button>
+                </div>
+            </form>
+
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="addDiscountModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="/guest/AddUserDiscountForBill" method="post" onsubmit="return beforeDiscount();">
+                <input type="hidden" name="user_id" value="@Model.User.id" />
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">@I18n.T("Discount")</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td><label>@I18n.T("Employee"):</label></td>
+                                <td>
+                                    <select name="staffid" required class="select2" placeholder="Employee">
+                                        <option></option>
+                                        @foreach (var item in UserManager.Instance.GetStaff(true))
+                                        {
+                                            <option value="@item.id">@item.name</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Amount"):</label></td>
+                                <td>
+                                    <input type="number" min="1" name="discount_amount" value="0" required />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label>@I18n.T("Comment"):</label></td>
+                                <td>
+                                    <input type="text" value="Discount for Bill" style="width:100%;" name="discount_comment" placeholder="@I18n.T("Optional")" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">@I18n.T("Save changes")</button>
+                </div>
+
+                <script>
+                    function beforeDiscount() {
+                        if ($("input[name='discount_amount']").val() > @Model.Total) {
+                            alert("Discount is bigger than total bill");
+                            return false;
+                        }
+                        return true;
+                    }
+                </script>
+            </form>
+
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+
+<script>
+	var isDirty = false;
+    var totalBill = @Model.Total;
+	$("#radiocash,#radiocredit").focus(function(){
+		if(!isDirty){
+            $(this).val(totalBill < 0 ? 0: totalBill);
+           
+		   isDirty = true;
+		}
+    });
+
+    $("#radiocredit").focus(function () {        
+        $("#radiocredit").trigger("input");
+        $("#creditChargeInfo").css("display", "block");
+    });
+
+    
+
+</script>
+

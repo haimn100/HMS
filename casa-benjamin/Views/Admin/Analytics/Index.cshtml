@@ -1,0 +1,80 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="widgetControls"></div>
+<h4><u>Kitchen</u></h4>
+<div class="row">
+    <div class="col-sm-12 col-md-6">
+        <div id="widget1"></div>
+    </div>
+    <div class="col-sm-12 col-md-6">
+        <div id="widget2"></div>
+    </div>
+</div>
+
+<h4><u>Accomodation</u></h4>
+<div class="row">
+    <div class="col-sm-12">
+        <div id="widget3"></div>
+    </div>
+</div>
+
+<script>
+
+    var ctrl = ChartHelper.widgetSearchCtrl('widgetControls');
+    ChartHelper.widget({
+        title: 'Orders Count',
+        height: 250,
+        searchCtrl: ctrl,
+        chartType: 'timePeriodGraph',
+        container: 'widget1',
+        series: [
+            {
+                id: 'orders',
+                endpoint: '/analytics/OrdersByDateTime',
+                name: 'Orders',
+                type: 'column'
+            }
+        ]
+    });
+    ChartHelper.widget({
+        title: 'Orders Income',
+        height: 250,
+        searchCtrl: ctrl,
+        chartType: 'timePeriodGraph',
+        container: 'widget2',
+        yLabel: '${value:,.0f}',
+        series: [
+            {
+                id: 'orders',
+                endpoint: '/analytics/OrdersIncomeByDateTime',
+                name: 'Income',
+                type: 'column',
+                color: '#0f0'
+            }
+        ]
+    });
+    ChartHelper.widget({
+        title: 'CheckIn/CheckOut',
+        height: 250,
+        searchCtrl: ctrl,
+        chartType: 'timePeriodGraph',
+        container: 'widget3',
+        series: [
+            {
+                id: 'checkouts',
+                endpoint: '/analytics/CheckoutsByDateTime',
+                name: 'Checkout',
+                type: 'column'
+            },
+            {
+                id: 'checkins',
+                endpoint: '/analytics/CheckinsByDateTime',
+                name: 'Checkin',
+                type: 'column'
+            }
+        ]
+    });
+    ctrl.search();
+</script>

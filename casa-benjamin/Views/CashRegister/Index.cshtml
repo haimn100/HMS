@@ -1,0 +1,300 @@
+﻿@model List<CashRegisterEvent>
+@{
+    ViewBag.Title = "Cash Register";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    decimal amount = (decimal)ViewBag.CurrentCash;
+    Staff user = (Staff)Session["user"];
+    Shift prevShift = (Shift)ViewBag.PrevShift;
+    Shift currentShift = (Shift)ViewBag.CurrentShift;
+
+}
+
+<div class="center-content" style="background-color:#fff;padding:20px;">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <img src="/images/cash-register.png" class="pull-left-rmargin" />
+            <div>
+                <h1>$@amount.ToString("N0")</h1>
+            </div>
+            <button type="button" style="width:100px;" class="btn bg-green waves-effect" data-toggle="modal" data-target="#addmodal" data-backdrop="false"><i class="material-icons">add_circle</i><br/>@I18n.T("Add")</button>
+            <button type="button" style="width:100px;" class="btn bg-red waves-effect" data-toggle="modal" data-target="#subtractmodal" data-backdrop="false"><i class="material-icons">remove_circle</i><br />@I18n.T("Subtract")</button>                      
+        </div>
+        
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card" style="margin-top:20px;">
+                <div class="header">
+                    <h2>
+                        @if (!string.IsNullOrEmpty(Request.QueryString.Get("shiftid")))
+                        {
+                            <text>@I18n.T("Shift Activity For") @currentShift.shift_date.ToShortUIDateTimeString()</text>
+                        }
+                        else
+                        {
+                            <text>@I18n.T("Current Shift Activity")</text>
+                        }
+
+                        @if(prevShift != null)
+                        {
+                            <text><small>(@I18n.T("Previous Shift") -  <a href="/cashregister?shiftid=@prevShift.id">@prevShift.shift_date.ToShortUIDateTimeString()</a>)</small></text>
+                        }
+                    </h2>
+                </div>
+                <div class="body">
+                    <table class="table dataTable">
+                        <thead>
+                            <tr>
+                                <th width="115">@I18n.T("Date")</th>
+                                <th>@I18n.T("Activity")</th>
+                                <th>@I18n.T("Value")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th>@I18n.T("Cash In Register")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderByDescending(x=> x.id))
+                            {
+                                <tr>
+                                    <td>@item.event_date.ToShortUIDateTimeString()</td>
+                                    <td>
+                                        @switch (item.event_type_id)
+                                        {
+                                            case EventType.CashRegisterAddFromCheckOut:
+                                                <text><span style="color:green;font-weight:bold;">@Html.Raw(I18n.T("Added</span> Cash From Checkout"))</span></text>
+                                                    break;
+                                                case EventType.CashRegisterAddIncome:
+                                                    <text><span style="color:green;font-weight:bold;">@Html.Raw(I18n.T("Added Income"))</span></text>
+                                                    break;
+                                                case EventType.CashRegisterAddFromEmployee:
+                                                                                            <text><span style="color:green;font-weight:bold;">@Html.Raw(I18n.T("Added Cash By Employee"))</span></text>
+                                                    break;
+                                                case EventType.CashRegisterSubstractFromEmployee:
+                                                                                            <text><span style="color:red;font-weight:bold;">@I18n.T("Subtracted Cash By Employee")</span></text>
+                                                    break;
+                                                case EventType.CashRegisterReset:
+                                                                                            <text><span style="color:grey;font-weight:bold;text-decoration:underline;">@I18n.T("Reset Cash Register")</span></text>
+                                                    break;
+                                                case EventType.CashRegisterAddFromCheckOutUpdate:
+                                                                                            <text><span style="color:green;font-weight:bold;">@I18n.T("Added Cash From Checkout Update")</span></text>
+                                                    break;
+                                                case EventType.CashRegisterAddFromOrder:
+                                                                                            <text><span style="color:green;font-weight:bold;">@I18n.T("Added Cash From Order")</span></text>
+                                                    break;
+                                                case EventType.CanceledOrder:
+                                                                                            <text><span style="color:red;font-weight:bold;">@I18n.T("Canceled Order")</span></text>
+                                                    break;
+                                                case EventType.RemovedOrderItem:
+                                                                                            <text><span style="color:red;font-weight:bold;">@I18n.T("Removed Order Item")</span></text>
+                                                break;
+                                            case EventType.CashRegisterAddPrePayment:
+                                                    <text><span style="color:green;font-weight:bold;">@I18n.T("Added Cash From Deposit")</span></text>
+                                                break;
+                                                case EventType.CashRegisterRemovePrePayment:
+                                                    <text><span style="color:red;font-weight:bold;">@I18n.T("Removed Cash From Deposit")</span></text>
+                                                break;
+                                                case EventType.CashRegisterUpdatePrePayment:
+                                                    <text><span style="font-weight:bold;">@I18n.T("Updated Cash From Deposit")</span></text>
+                                                break;
+                                                case EventType.CashRegisterAddExpense:
+                                                    <text><span style="font-weight:bold;color:red;">@I18n.T("Added Expense")</span></text>
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.event_value < 0)
+                                        {
+                                            <span style="color:red;">$@item.event_value.ToString("N0")</span>
+                                        }
+                                        else
+                                        {
+                                            @:$@item.event_value.ToString("N0")
+                                        }
+                                    </td>
+                                    <td>
+                                        @item.staff_name
+                                    </td>
+                                    <td>
+                                        @item.comment
+                                        @switch (item.event_type_id)
+                                        {
+                                            case EventType.CashRegisterAddFromCheckOut:
+                                                <text> @I18n.T("From") <a href="/guest/bill?userid=@item.event_realted_entity_id">@I18n.T("Checkout")</a> </text>
+                                                break;
+                                            case EventType.CashRegisterAddFromCheckOutUpdate:
+                                                <text> @I18n.T("From") <a href="/guest/bill?userid=@item.event_realted_entity_id">@I18n.T("Checkout")</a></text>
+                                                break;
+                                            case EventType.CashRegisterAddFromOrder:
+                                            case EventType.CanceledOrder:
+                                            case EventType.RemovedOrderItem:
+                                                <text> @I18n.T("From") <a href="/kitchen/order?orderid=@item.event_realted_entity_id">@I18n.T("Order") #@item.event_realted_entity_id</a></text>
+                                                break;
+                                            case EventType.CashRegisterAddPrePayment:
+                                            case EventType.CashRegisterRemovePrePayment:
+                                            case EventType.CashRegisterUpdatePrePayment:
+                                                <text> @I18n.T("To") <a href="/guest/bill?userid=@item.event_realted_entity_id">@I18n.T("User")</a></text>
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        $@item.current_register_amount.ToString("N0")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+           
+        </div>
+    </div>
+    
+    <div class="modal fade" id="addmodal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="/cashregister/AddToRegister" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">@I18n.T("Add Cash To Register")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><label>@I18n.T("Employee"):</label></td>
+                                    <td>
+                                        <select id="staff" name="staffid" required class="select2" placeholder="Employee">
+                                            <option></option>
+                                            @foreach (var item in UserManager.Instance.GetStaff(true))
+                                            {
+                                                <option value="@item.id">@item.name</option>
+                                            }
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>@I18n.T("Amount"):</label></td>
+                                    <td>
+                                        <input type="number" min="0" name="amount" required />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>@I18n.T("Comment"):</label></td>
+                                    <td>
+                                        <input type="text" name="comment" autocomplete="on" placeholder="@I18n.T("Optional")" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">@I18n.T("Save changes")</button>
+                    </div>
+                </form>
+            
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+    <div class="modal fade" id="subtractmodal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="/cashregister/SubtractRegister" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">@I18n.T("Substract Cash From Register")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><label>@I18n.T("Employee"):</label></td>
+                                    <td>
+                                        <select id="staff" name="staffid" required class="select2" placeholder="Employee">
+                                            <option></option>
+                                            @foreach (var item in UserManager.Instance.GetStaff(true))
+                                            {
+                                                <option value="@item.id">@item.name</option>
+                                            }
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>@I18n.T("Amount"):</label></td>
+                                    <td>
+                                        <input type="number" min="0" name="amount" required />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>@I18n.T("Comment"):</label></td>
+                                    <td>
+                                        <input type="text" name="comment" autocomplete="on" placeholder="@I18n.T("Optional")" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">@I18n.T("Close")</button>
+                        <button type="submit" class="btn btn-primary">@I18n.T("Save changes")</button>
+                    </div>
+                </form>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+    @*<div class="modal fade" id="resetmodal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="/cashregister/ResetRegister" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">@I18n.T("Reset Cash")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><label>@I18n.T("Employee"):</label></td>
+                                    <td>
+                                        <select id="staff" name="staffid" required class="select2" placeholder="Employee">
+                                            <option></option>
+                                            @foreach (var item in CacheManager.Instance.Staff.Where(x => x.type == UserType.Employee))
+                                            {
+                                                <option value="@item.id">@item.name</option>
+                                            }
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>@I18n.T("Amount"):</label></td>
+                                    <td>
+                                        <input type="number" min="0" name="amount" required />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>@I18n.T("Comment"):</label></td>
+                                    <td>
+                                        <input type="text" name="comment" placeholder="@I18n.T("Optional")" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">@I18n.T("Close")</button>
+                        <button type="submit" class="btn btn-primary">@I18n.T("Save changes")</button>
+                    </div>
+                </form>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>*@
+</div>

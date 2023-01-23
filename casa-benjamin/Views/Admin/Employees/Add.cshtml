@@ -1,0 +1,76 @@
+﻿@{
+  Layout = "~/Views/Shared/_AdminLayout.cshtml";
+  Staff user = (Staff)Session["user"];
+}
+
+<div class="row clearfix">
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert alert-dismissible alert-success">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+            @ViewBag.Message
+        </div>
+    }
+    <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+        <div class="card">
+            <div class="header">
+                <h2>
+                    @I18n.T("Add Employee")
+                </h2>
+            </div>
+            <div class="body">
+                <form action="/admin/EmployeesAdd" method="post">
+                    <label for="name">@I18n.T("Name")</label>    <div class="form-group">
+                        <div class="form-line">
+                            <input value="" type="text" name="name" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="email">@I18n.T("User Name")</label>    
+                    <div class="form-group">
+                        <div class="form-line">
+                            <input value="" type="text" name="email" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="password">@I18n.T("Password")</label>    <div class="form-group">
+                        <div class="form-line">
+                            <input value="" type="text" name="password" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="password">@I18n.T("Phone")</label>    <div class="form-group">
+                        <div class="form-line">
+                            <input value="" type="text" name="phone" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="type">@I18n.T("Type")</label>
+                    <div class="form-group">
+                        <div class="form-line focused">
+
+                            <select name="type" class="form-control show-tick">
+                                <option value="3">@I18n.T("Employee")</option>
+                                @if (user.type == UserType.Admin)
+                                {
+                                    <option value="4">@I18n.T("Editor")</option>
+                                    <option value="1">@I18n.T("Admin")</option>
+                                    <option value="5">@I18n.T("HouseKeeper")</option>
+                                    <option value="6">@I18n.T("KitchenManager")</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary m-t-15 waves-effect">@I18n.T("Save")</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

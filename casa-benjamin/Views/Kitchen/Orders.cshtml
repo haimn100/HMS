@@ -1,0 +1,108 @@
+﻿@model List<Order>
+@{
+    string dateFormat = DateTimeHelper.GetShortUIDateTimeString();
+    int days = ViewBag.days;
+    string redirect = Request.Url.PathAndQuery;
+}
+
+<div class="center-content"> 
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="header clearfix">
+                    <h4 class="pull-left">@I18n.T("Orders")</h4>
+                    <div class="pull-right">
+                        <form action="/kitchen/orders" method="get">
+                            <select class="select2" style="width:150px;" data-no-clear name="days" onchange="$(form).submit();">
+                                <option value="1" @if (days == 1) { <text> selected="selected" </text> }>@I18n.T("Last Day")</option>
+                                <option value="7" @if (days == 7) { <text> selected="selected" </text> }>@I18n.T("Last Week")</option>
+                                <option value="30" @if (days == 30) { <text> selected="selected" </text> }>@I18n.T("Last Month")</option>
+                            </select>
+                        </form>                       
+                    </div>
+                    <div class="pull-right-rmargin">
+                        <select name="staff" class="select2 staff-select" placeholder="@I18n.T("Employee")">
+                            <option></option>
+                            @foreach (var item in UserManager.Instance.GetStaff(true))
+                            {
+                                <option value="@item.id">@item.name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="body">                   
+                     <div class="table-responsive">
+                    <table class="table dataTable" data-page-size="30">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Id")</th>
+                                <th width="150" data-order="desc">@I18n.T("Date")</th>
+                                <th width="150">@I18n.T("Guest")</th>
+                                <th>@I18n.T("Bed")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th>@I18n.T("Pay Type")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th>@I18n.T("Total")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderByDescending(x=>x.order_date))
+                            {
+                                <tr>
+                                    <td><a href="/kitchen/order?orderid=@item.id">@item.id</a></td>
+                                    <td>@item.order_date.ToString(dateFormat)</td>
+                                    <td>@item.user_name</td>
+                                    <td>@item.user_bed</td>
+                                    <td>@item.staff_name</td>
+                                    <td>@item.pay_type_id.ToString()</td>
+                                    <td class="order-comment">
+                                        @if (item.split_total != 0)
+                                        {
+                                            if (item.splited_order_id == 0)
+                                            {
+                                                <text>splited order with @(item.split_count - 1) more people from a total of $@item.split_total</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Splited from <a href="/kitchen/order?orderid=@item.splited_order_id">order #@item.splited_order_id</a> between @item.split_count people from a total of $@item.split_total</text>
+                                                @:by <a target="_blank" class="no-print" href="/guest/userprofile?userid=@item.splited_by">user #@item.splited_by</a>
+                                            }
+                                        }
+                                    </td>
+                                    <td align="right">
+                                         $@item.total.ToString("N0")
+                                    </td>
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        $(".cancel-order").click(function () {
+
+            if ($("select[name='staff']").val() === "") {
+                alertify.alert("Choose Employee");
+                return false;
+            }
+
+            var approve = confirm('Are you sure?');
+            if (approve) {
+                $(this).attr("href", $(this).attr("href") + "&staff=" + $("select[name='staff']").val());
+                return true;
+            }
+
+            return false;
+        });
+    });
+</script>

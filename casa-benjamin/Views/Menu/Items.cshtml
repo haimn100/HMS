@@ -1,0 +1,54 @@
+﻿@model MenuCategory
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+
+<div class="container-fluid report-screen">
+    <h6 class="reports-title">
+        <a href="/menu/categories">Menu</a> > @Model.name
+    </h6>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <div class="table-responsive">
+                        <table id="productsTable" class="table no-select"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let catId = @Model.id;
+    window.dtOptions = [
+        {
+            el: 'productsTable',
+            ajax: {
+                read: '/menu/itemsTable?categoryId=' + catId,
+                update: '/menu/updateItem',
+                add: '/menu/addItem',
+                delete: '/menu/deletemenuitem'
+            },
+            order: [[3, "desc"]],
+            columns: [
+                { data: 'id', title: 'Id', visible: false, edit: 'readonly', create:'false' },
+                { data: 'cat_id',visible: false, edit: 'hidden', create:'hidden',newRowVal: catId  },
+                {
+                    data: 'name', title: 'Name', render: (data, type, row) => {
+                        return `<a href='/menu/MenuItemIngredientsPage?menuItemId=${row.id}'>${data}<//a>`;
+                    }
+                },
+                { data: 'number', title: 'Position', type:'number' },
+                { data: 'price', title: 'Price', type: 'number' },
+                { data: 'menu_category_type', visible: false, edit:'hidden', create:'hidden', newRowVal:1 },
+                { data: 'consumption', visible: false, edit:'hidden', create:'hidden' },
+                { data: 'is_active', title: 'Active', type:'bool', dType:'bool-icon', create:'hidden', newRowVal: 1 },
+                { data: 'product_id', title: 'Product', list: { url: '/inventoryProduct/SelectList', placeholder: 'Choose Product' } },
+                { data: 'product_weight', title: 'Product Weight', type:'number', dType:'weight'},
+            ],
+        }
+    ];
+</script>

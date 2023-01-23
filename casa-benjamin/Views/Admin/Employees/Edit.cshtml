@@ -1,0 +1,77 @@
+﻿@model Staff
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    casa_benjamin.Modules.Staff.Entities.Staff user = (casa_benjamin.Modules.Staff.Entities.Staff)Session["user"];
+
+}
+
+<div class="row clearfix">
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert alert-dismissible alert-success">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+            @ViewBag.Message
+        </div>
+    }
+    <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+        <div class="card">
+            <div class="header">
+                <h2>
+                    @I18n.T("Edit Employee")
+                </h2>
+            </div>
+            <div class="body">
+                <form action="/admin/EmployeesEditForm" method="post">
+                    <input type="hidden" name="id" value="@Model.id">
+                    <label for="name">@I18n.T("Name")</label>    <div class="form-group">
+                        <div class="form-line focused">
+                            <input value="@Model.name" type="text" name="name" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="email">@I18n.T("Email")</label>    <div class="form-group">
+                        <div class="form-line focused">
+                            <input value="@Model.email" type="text" name="email" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="email">@I18n.T("Phone")</label>    <div class="form-group">
+                        <div class="form-line focused">
+                            <input value="@Model.phone" type="text" name="phone" class="form-control " required="" placeholder="">
+                        </div>
+                    </div>
+
+                    <label for="type">@I18n.T("Type")</label>
+                    <div class="form-group">
+                        <div class="form-line focused">
+
+                            <select name="type" class="form-control show-tick">
+                                @if (user.type == UserType.Admin || user.type == UserType.Editor)
+                                {
+                                    <option value="1" @if (Model.type == UserType.Admin) { <text> selected="selected" </text>  }>@I18n.T("Admin")</option>
+                                    <option value="4" @if (Model.type == UserType.Editor) { <text> selected="selected" </text>  }>@I18n.T("Editor")</option>
+                                }
+                                <option value="3" @if (Model.type == UserType.Employee) {<text>selected="selected"</text> }>@I18n.T("Employee")</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+
+                    <div class="form-group">
+                        <label style="float:left;" for="is_working">@I18n.T("Currently Working")</label>
+                        <div class="switch">
+                            <label><input id="is_working" @if (user.type != UserType.Admin && user.type != UserType.Editor) { <text>disabled</text> } value="true" name="is_working" type="checkbox" @if (Model.is_working) { <text>checked="checked"</text> }><span class="lever is_working"></span></label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary m-t-15 waves-effect">@I18n.T("Save")</button>
+                        <a href="/admin/employees" class="btn btn-primary m-t-15 waves-effect">@I18n.T("Cancel")</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+

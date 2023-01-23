@@ -1,0 +1,211 @@
+﻿@{ 
+    Staff user = (Staff)Session["user"];
+}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+    @Styles.Render("~/bundles/css")
+
+    @Scripts.Render("~/bundles/prebodyjs")
+    @{
+        string lang = "/i18n/langs/" + CacheManager.Instance.AppSettings.language + ".js";
+    }
+    <script src="@lang"></script>
+    
+    @{ 
+        if (TempData["alert"] != null)
+        {
+            if(TempData["alerttype"] != null && (string)TempData["alerttype"] == "success")
+            {
+                <script>
+                    $(document).ready(function () {                  
+                        alertify.success('@TempData["alert"].ToString()');
+                    });
+                </script>
+            }
+            else
+            {
+                <script>
+                      $(document).ready(function () {
+                        alertify.alert('@TempData["alert"].ToString()');
+                    });
+                </script>
+            }
+        }
+    }
+    <title>
+        @ViewBag.Title
+    </title>
+</head>
+
+<body class="theme-deep-purple" ng-app="myApp">
+
+    <div class="overlay"></div>    
+    <section class="no-print">
+        <nav class="navbar">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a href="javascript:void(0);" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bootNav" aria-expanded="false"></a>
+                    <a style="color:#fff !important;" href="/">HOME</a>
+
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bootNav">
+                    <ul class="nav nav-pills" id="NavBarLinks"></ul>
+                    <ul class="nav navbar-nav navbar-right" id="NavBarActions"></ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </section>
+
+    <section class="content">
+        @RenderBody()
+    </section>
+
+    <script>
+            var settings = {
+            users: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.Users)),
+            rooms: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.Rooms)),
+            reservations: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.Reservations)),
+            stockAlerts: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.StockAlerts)),
+            menu: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.MenuCategories)),
+            ingredients: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.Ingredients)),
+            barcodePrefix: "@CacheManager.Instance.AppSettings.barcodePrefix",
+            staff: { name: '@user.name', id: @user.id }
+            }
+        window.Casa = {};
+        Casa.settings = settings;
+
+        new AppNavBarMenu({
+            selectorId: 'NavBarLinks',
+            menu: [
+                {
+                    "title": "Recepción",
+                    "link": "/",
+                    //"icon": "local_hotel"
+                },
+                {
+                    "title": "Cocina",
+                    "link": "/kitchen",
+                    //"icon": "restaurant"
+                },
+                {
+                    "title": "Limpieza",
+                    "link": "/housekeeping",
+                    //"icon": "vpn_key"
+                },
+                    {
+                    "title": "Caja",
+                    "link": "/cashregister",
+                    //"icon":"attach_money"
+                },
+                      {
+                    "title": "Cerrar Turno",
+                          "link": "/home/endofshift",
+                    //"icon":"access_alarm"
+                },
+                {
+                    "title": "CheckOuts",
+                    "link": "/home/guests",
+                    //"icon": "exit_to_app"
+                },
+                {
+                    "title": "Reservas",
+                    "link": "/reservation"
+                },
+                {
+                    "icon": "build",
+                    "link": "/reservation/calendar"
+                },
+                
+            ]
+        });
+    </script>
+
+    @RenderSection("PageScripts", false)
+
+    <script type="text/ng-template" id="assign-cleaning-dialog.htm">
+        <md-dialog>
+            <form autocomplete="off">
+                <md-toolbar>
+                    <div class="md-toolbar-tools">
+                        <h2>Assign HouseKeeper to room {{room.room_number}}</h2>
+                        <span flex></span>
+                        <md-button class="md-icon-button" ng-click="cancel()">
+                            <md-icon class="action-btn-icon" md-font-library="material-icons">highlight_off</md-icon><br />
+                        </md-button>
+                    </div>
+                </md-toolbar>
+                <md-dialog-content>
+                    <div class="md-dialog-content">
+                        <div class="form-group">
+                            <label>Dirty Beds:</label>
+                            <div ng-repeat="bed in dirtyBeds">
+                                <span>{{bed.bed_id}} ({{bed.last_checkout | date:'dd/MM/yyyy HH:mm'}})</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Choose HouseKeeper:</label>
+                            <md-select required ng-model="selectedStaff" ng-change="onStaffSelected(selectedStaff)">
+                                <md-option ng-repeat="staff in staffList" ng-value="staff">
+                                    {{staff.name}}
+                                </md-option>
+                            </md-select>
+                        </div>
+
+                    </div>
+                </md-dialog-content>
+                <md-dialog-actions layout="row" ng-if="!done">
+                    <md-button ng-click="cancel()" class="md-raised">Cancel</md-button>
+                    <md-button ng-click="answer()" class="md-raised md-primary" ng-disabled="submiting">Ok</md-button>
+                </md-dialog-actions>
+            </form>
+        </md-dialog>
+    </script>
+    <script type="text/ng-template" id="unassign-cleaning-dialog.htm">
+        <md-dialog>
+            <form autocomplete="off">
+                <md-toolbar>
+                    <div class="md-toolbar-tools">
+                        <h2>Finished cleaning room {{room.room_number}}</h2><br />
+                        <span flex></span>
+                        <md-button class="md-icon-button" ng-click="cancel()">
+                            <md-icon class="action-btn-icon" md-font-library="material-icons">highlight_off</md-icon><br />
+                        </md-button>
+                    </div>
+                </md-toolbar>
+                <md-dialog-content>
+                    <md-subheader class="md-primary">HouseKeeper: {{room.assigned_house_keeper_name}}</md-subheader>
+                    <div class="md-dialog-content">
+                        <div class="form-group">
+                            <label>How many beds were cleaned:</label>
+                            <md-select ng-model="numOfBeds">
+                                <md-option ng-repeat="num in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]" value="{{num}}" ng-selected="num == 1">{{num}}</md-option>
+                            </md-select>
+                        </div>
+                        <div class="form-group">
+                            <md-input-container class="md-block" flex-gt-sm>
+                                <label>Comment (Optional)</label>
+                                <input ng-model="comment">
+                            </md-input-container>
+                        </div>
+                    </div>
+                </md-dialog-content>
+                <md-dialog-actions layout="row" ng-if="!done">
+                    <md-button ng-click="cancel()" class="md-raised">Cancel</md-button>
+                    <md-button ng-click="answer()" class="md-raised md-primary" ng-disabled="submiting">Ok</md-button>
+                </md-dialog-actions>
+            </form>
+        </md-dialog>
+    </script>
+    <script src="/js/alertify.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,273 @@
+﻿@model UIShift
+
+<div class="center-content">
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="header clearfix">
+                    <h2 class="pull-left">
+                        @I18n.T("Cash And Credit Activities") | @Model.EndOfShiftDate.ToShortUIDateTimeString()<br/>
+                        <small>@{ if (Model.LastShift != null)
+                            { 
+                                <text><a href="/home/endofshift?id=@Model.LastShift.id">@I18n.T("Last by {{0}} in {{1}}", Model.LastShift.shift_employee_name, Model.LastShift.shift_date.ToShortUIDateTimeString()) </text> } }</a></small> 
+                    </h2>
+                    <div class="pull-right">
+                        
+                    </div>
+                </div>
+                <div class="body">
+                    @{
+                        var groupedOrdersByPayType = Model.Orders.Where(x => !x.is_canceled).GroupBy(x => x.pay_type_id);
+                        var cashOrders = Model.Orders.Where(x => !x.is_canceled && x.pay_type_id == PayType.Cash).ToList();
+                        var creditOrders = Model.Orders.Where(x => !x.is_canceled && x.pay_type_id == PayType.Credit).ToList();
+                    }
+
+                    @if (cashOrders.Count() > 0)
+                    {
+                        <h4>@I18n.T("Kitchen & Services (Cash)")</h4>
+                        @table(cashOrders)
+                    }
+
+                     @if (creditOrders.Count() > 0)
+                    {
+                        <h4>@I18n.T("Kitchen & Services (Credit)")</h4>
+                        @table(creditOrders)
+                    }
+                    
+                    @if(Model.CheckOuts.Count > 0)
+                    {
+                        <h4>@I18n.T("Checkouts")</h4>
+                        <table class="table table-bordered table-small">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Date")</th>
+                                    <th>@I18n.T("Employee")</th>
+                                    <th>@I18n.T("Bed")</th>
+                                    <th>@I18n.T("Cash")</th>
+                                    <th>@I18n.T("Credit")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var co in Model.CheckOuts)
+                                {
+                                <tr>
+                                    <td>@co.check_out_date.ToShortUIDateTimeString()</td>
+                                    <td>@co.staff</td>
+                                    <td>@co.bed_id</td>
+                                    <td align="right">$@co.total_cash.ToString("N0")</td>
+                                    <td align="right">$@co.total_credit.ToString("N0")</td>
+                                </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td class="bill-total">$@Model.CheckOuts.Sum(x => x.total_cash).ToString("N0")</td>
+                                    <td class="bill-total">$@Model.CheckOuts.Sum(x => x.total_credit).ToString("N0")</td>
+
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+
+                    @if (Model.ExpensesEvents.Count > 0)
+                    {
+                        <h4>@I18n.T("Expense Categories")</h4>
+                        <table class="table table-bordered table-small">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th style="width:50%">@I18n.T("Comment")</th>
+                                <th>@I18n.T("Value")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ExpensesEvents)
+                            {
+                            <tr>
+                                <td>@item.event_date.ToShortUIDateTimeString()</td>
+                                <td>
+                                    @item.staff_name
+                                </td>
+                                <td>
+                                    @item.comment
+                                </td>
+                                <td>
+                                    <span class="expense-color">$@item.event_value.ToString("N0")</span>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="total">
+                                <td colspan="3">@I18n.T("Total")</td>
+                                <td class="expense-color">$@Model.TotalExpenses.ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    }
+
+                    @if (Model.IncomesEvents.Count > 0)
+                    {
+                        <h4>@I18n.T("Income Categories")</h4>
+                        <table class="table table-bordered table-small">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Employee")</th>
+                                <th style="width:50%">@I18n.T("Comment")</th>
+                                <th>@I18n.T("Value")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.IncomesEvents)
+                            {
+                                <tr>
+                                    <td>@item.event_date.ToShortUIDateTimeString()</td>
+                                    <td>
+                                        @item.staff_name
+                                    </td>
+                                    <td>
+                                        @if(item.event_type_id == EventType.CashRegisterAddPrePayment
+                                            || item.event_type_id == EventType.CashRegisterRemovePrePayment
+                                            || item.event_type_id == EventType.CashRegisterUpdatePrePayment)
+                                        {
+                                            <text>
+                                        <a href="/guest/bill?userid=@item.event_realted_entity_id.ToString()">@I18n.T("CheckOut Deposit")</a>
+                                            </text> 
+                                        }
+                                        else {@item.comment }                                        
+                                    </td>
+                                    <td>
+                                        <span class="money-color">$@item.event_value.ToString("N0")</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="total">
+                                <td colspan="3">@I18n.T("Total")</td>
+                                <td class="money-color">$@Model.TotalIncomes.ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    }
+
+                    <table class="table">
+                        <tr>
+                            <td align="center" style="border:0 none;">
+
+                                <div style="border-top:1px solid #ccc;padding-top:15px;text-align:right;">
+                                    @I18n.T("Kitchen & Services (Cash)"): <span class="money-color">$@Model.TotalCash.ToString("N0")</span><br />
+                                    @I18n.T("Kitchen & Services (Credit)"): <span class="money-color">$@Model.TotalCredit.ToString("N0")</span><br />
+                                    @I18n.T("CheckOuts (Cash)"): <span class="money-color">$@Model.TotalCheckoutsCash.ToString("N0")</span><br />
+                                    @I18n.T("CheckOuts (Credit)"): <span class="money-color">$@Model.TotalCheckoutsCredit.ToString("N0")</span><br />
+                                    @I18n.T("Income Categories"): <span class="money-color">$@Model.TotalIncomes.ToString("N0")</span><br />
+                                    @I18n.T("Expense Categories"): <span class="expense-color">$@Model.TotalExpenses.ToString("N0")</span><br />                              
+                                    <b>@I18n.T("Total"):</b> <span class="@if (Model.Total > 0) {<text>money-color</text>} else if(Model.Total < 0){ <text>expense-color</text> }">$@Model.Total.ToString("N0")</span><br />
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="row no-print">
+                        <div class="col-lg-12">
+                            @if (!ViewBag.ExistingShift)
+                            {
+                            <form action="/home/closeshift" method="post" class="pull-right">
+                                <input type="hidden" name="total" value="@Model.Total" />
+                                <input type="hidden" name="totalcash" value="@Model.TotalCash" />
+                                <input type="hidden" name="totalcredit" value="@Model.TotalCredit" />
+                                <input type="hidden" name="totalcanceled" value="@Model.TotalCanceled" />
+                                <input type="hidden" name="totalcheckouts" value="@Model.CheckOuts.Sum(x => x.total)" />
+                                <input type="hidden" name="totalkitchen" value="@Model.Orders.Where(x => x.menu_category_type == MenuCategoryType.Kitchen).Sum(x => x.total)" />
+                                <input type="hidden" name="totalservices" value="@Model.Orders.Where(x => x.menu_category_type == MenuCategoryType.Service).Sum(x => x.total)" />
+                                <input type="hidden" name="checkoutscash" value="@Model.TotalCheckoutsCash" />
+                                <input type="hidden" name="checkoutscredit" value="@Model.TotalCheckoutsCredit" />
+                                <input type="hidden" name="expenses" value="@Model.TotalExpenses" />
+                                <input type="hidden" name="incomes" value="@Model.TotalIncomes" />
+
+                                <input type="hidden" name="endshiftdate" value="@Model.EndOfShiftDate.ToString()" />
+                                <label>@I18n.T("Employee"): </label>
+                                <select id="staff" name="staff" required class="staff-select " placeholder="Select Employee">
+                                    <option></option>
+                                    @foreach (var item in UserManager.Instance.GetStaff(true))
+                                    {
+                            <option value="@item.id">@item.name</option>
+                                    }
+                                </select>
+                                <button id="sbmt" class="hidden" type="submit"></button>
+                            </form>
+                            }
+                            <div class="clearfix"></div>
+                            <div class="pull-right">
+                                <button onclick="window.print();" style="margin-left:10px;" type="button" class="btn bg-red btn-circle waves-effect waves-circle waves-float">
+                                    <i class="material-icons">print</i>
+                                </button>
+                                @if (!ViewBag.ExistingShift)
+    {
+                            
+                            <button onclick="if ($('#staff').val() == '') { alert('@I18n.T("Choose Employee")'); } else { $('#sbmt').click(); window.print(); }" style="margin-left:10px;" type="button" class="btn bg-red waves-effect waves-float">
+                                @I18n.T("Close Shift")
+                            </button>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@helper table(List<Order> orders) {
+
+    <table class="table table-bordered table-small">
+        <thead>
+            <tr>
+                <th style="width:30px">@I18n.T("Order")</th>
+                <th style="width:25%;">@I18n.T("Date")</th>
+                <th>@I18n.T("Employee")</th>
+                <th>@I18n.T("Guest")</th>
+                <th>@I18n.T("Guest Bed")</th>
+                <th style="text-align:right;">@I18n.T("Total")</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var item in orders.OrderBy(x => x.order_date).ToList())
+            {
+                <tr class="order-tr">
+                    <td align="center"><a class="no-print" href="/kitchen/order?orderid=@item.id&redirectto=/home/endofshift">@item.id</a><span class="print">@item.id</span></td>
+                    <td>@item.order_date.ToShortUIDateTimeString()</td>
+                    <td>@item.staff_name</td>
+                    <td>@item.user_name</td>
+                    <td>@item.user_bed</td>
+                    <td align="right" style="font-weight:bold;">$@item.total.ToString("N0")</td>
+                </tr>
+                var orderItems = Model.OrderItems.Where(x => x.order_id == item.id);
+                foreach (var oi in orderItems)
+                {
+                    <tr>
+                        <td></td>
+                        <td colspan="4">
+                            @oi.menu_category_name > @oi.menu_item_name
+                        </td>
+                        <td align="right">
+                            $@oi.total.ToString("N0")
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5"></td>
+                <td class="bill-total">$@orders.Sum(x => x.total).ToString("N0")</td>
+            </tr>
+        </tfoot>
+    </table>
+}

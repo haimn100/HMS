@@ -1,0 +1,113 @@
+﻿@model List<StockItem>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var staff = (Staff)Session["user"];
+}
+
+<div class="row clearfix">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+            <div class="header">
+                <h2>
+                    @I18n.T("Stock")
+                </h2>
+            </div>
+            <div class="body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <table data-order="[[ 2, &quot;desc&quot; ]]" class="table table-bordered table-hover js-responsive-table dataTable" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th width="30">@I18n.T("Id")</th>
+                                    <th>@I18n.T("Name")</th>
+                                    <th>@I18n.T("Category")</th>
+                                    <th>@I18n.T("Quantity")</th>
+                                    <th>@I18n.T("Warning")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var member in Model)
+                                {
+                                    <tr>
+                                        <td>@member.id</td>
+                                        <td><a href="/reports/stock?itemid=@member.menu_item_id">@member.menu_item_name</a></td>
+                                        <td>@member.menu_item_category_name</td>
+                                        <td @if (staff.type == UserType.Admin || staff.type == UserType.Editor) { <text>class="editable"</text> }>@member.quantity</td>
+                                        <td @if (staff.type == UserType.Admin || staff.type == UserType.Editor) { <text>class="editable"</text> }>@member.warning_quantity</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" align="right">
+                                        <button class="btn" onclick="remove();">@I18n.T("Remove")</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (staff.type == UserType.Admin || staff.type == UserType.Editor || staff.type == UserType.KitchenManager)
+{
+    <script>
+
+    function remove() {
+        var table = $('table').DataTable();
+        if (table.row('.selected').length === 0) {
+            alertify.alert("@I18n.T("Select a row")");
+            return;
+        }
+        var row = table.row('.selected');
+        var id = row.data()[0];
+
+        $.get("/stock/DeleteStock?id= " + id);
+
+        row.remove().draw(false);
+    }
+
+    AppEventBus.onDataTableTD(function (table,rowData,tdData,tdIndex) {
+        var that = this;
+        switch (tdIndex) {
+            case 3:
+                alertify
+                    .defaultValue(tdData)
+                    .prompt("@I18n.T("Enter Quantity")",
+                    function (val, ev) {
+                        // The click event is in the event variable, so you can use it here.
+                        ev.preventDefault();
+                        if (isNaN(val)) {
+                            alertify.alert("@I18n.T("Number is not in correct format")");
+                        } else {
+                            $.get("/stock/UpdateStockItemQuantity?id=" + rowData[0] + "&quantity=" + val);
+                            table.cell(that).data(parseInt(table.cell(that).data()) + parseInt(val)).draw();
+                        }
+                    });
+                break;
+            case 4:
+                alertify
+                    .defaultValue(tdData)
+                    .prompt("@I18n.T("Enter Warning Quantity")",
+                    function (val, ev) {
+                        // The click event is in the event variable, so you can use it here.
+                        ev.preventDefault();
+                        if (isNaN(val)) {
+                            alertify.alert("@I18n.T("Number is not in correct format")");
+                        } else {
+                            $.get("/stock/UpdateStockItemWarningQuantity?id=" + rowData[0] + "&quantity=" + val);
+                            table.cell(that).data(val).draw();
+                        }
+                    });
+                break;
+            default:
+                break;
+        }
+
+    });
+
+    </script>
+}

@@ -1,0 +1,42 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">
+        Products Assigment
+    </h1>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <div class="table-responsive">
+                        <table id="productsTable" class="table no-select"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+        window.dtOptions = [
+            {
+                el: 'productsTable',
+                ajax: {
+                    read: '/product/assigntable',
+                    update: '/product/assignupdate',
+                    add: '/product/assignadd',
+                    delete: '/product/assigndelete'
+                },
+                order:  [[1, "desc"]],
+                columns: [
+                    { data: 'id', title: 'Id', visible: false, edit:'readonly' },
+                    { data: 'menu_item_id', title: 'Menu Item', list: { url: '/kitchen/menuitems' } },
+                    { data: 'menu_item_ing_id', title: 'Ingredient', list: { url: '/kitchen/ingredients', extra: [{id:0, name: "*"}] } },
+                    { data: 'product_id', title: 'Product', list: {url: '/product/list', nameField: 'title'}},
+                    { data: 'product_weight', title: 'Weight', type: 'number' , dType:'weight' }
+                ]
+            }
+        ];
+</script>

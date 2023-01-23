@@ -1,0 +1,112 @@
+﻿@model List<Shift>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+    List<Shift> shiftsOverTime = ReportsManager.Instance.GetShiftsOverTime(30);
+
+}
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("SHIFTS REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("DAILY REPORT")
+            <b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+</div>
+    
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body dataTable-no-header">
+                        <table class="table table-small table-bordered dataTable" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th width="90">@I18n.T("Date")</th>
+                                    <th>@I18n.T("Employee")</th>
+                                    <th>@I18n.T("Kitchen & Services (Cash)")</th>
+                                    <th>@I18n.T("Kitchen & Services (Credit)")</th>
+                                    <th>@I18n.T("CheckOuts (Cash)")</th>
+                                    <th>@I18n.T("CheckOuts (Credit)")</th>
+                                    <th>@I18n.T("Expenses")</th>
+                                    <th>@I18n.T("Incomes")</th>
+                                    <th>@I18n.T("Total")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                <tr>
+                                    <td><a href="/home/endofshift?id=@item.id">@item.shift_date.ToShortUIDateTimeString()</a></td>
+                                    <td>@item.shift_employee_name (@item.shift_employee_id)</td>
+                                    <td>$@item.shift_total_cash.ToString("N0")</td>
+                                    <td>$@item.shift_total_credit.ToString("N0")</td>
+                                    <td>$@item.checkouts_cash.ToString("N0")</td>
+                                    <td>$@item.checkouts_credit.ToString("N0")</td>
+                                    <td>$@item.expenses.ToString("N0")</td>
+                                    <td>$@item.incomes.ToString("N0")</td>
+                                    <td>$@item.shift_total.ToString("N0")</td>
+                                </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td></td>
+                                    <td></td>
+                                    <td>$@Model.Sum(x => x.shift_total_cash).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.shift_total_credit).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.checkouts_cash).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.checkouts_credit).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.expenses).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.incomes).ToString("N0")</td>
+                                    <td>$@Model.Sum(x => x.shift_total).ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                    </table>                      
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="timeGraph" class="lg-graph"></div>
+            </div>
+        </div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        var shiftGraph = @Html.Raw(Json.Encode(shiftsOverTime));
+        var highchartsData = [];
+        for (var i = 0; i < shiftGraph.length; i++) {
+            var date = shiftGraph[i].shift_date;
+            date = parseFloat(date.substring(6).replace(")/", ""));
+            date = new Date(date);
+            date = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+            highchartsData.push([date, shiftGraph[i].shift_total]);
+        }
+
+        ChartHelper.timeGraph("timeGraph", "Shifts Over Time", [{ name: "Total Revenue", data: highchartsData }],
+            {
+                xTitle: "@I18n.T("Date")",
+                yTitle: "@I18n.T("Revenue")",
+                subtitle: "@I18n.T("Last 30 Days")",
+                tooltip: {
+                    headerFormat: '<b>{point.x:%e. %b} Revenue: </b><br>',
+                    pointFormat: ' ${point.y}'
+                }
+            })
+      
+        $("#updateReport").click(function () {
+                var from = $("#fromDate").val();
+                var to = $("#toDate").val();
+                window.location = "/reports/Shifts?from=" + from + "&to=" + to;
+            });
+
+        });
+
+</script>

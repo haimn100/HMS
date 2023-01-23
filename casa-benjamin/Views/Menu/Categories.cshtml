@@ -1,0 +1,49 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+
+<div class="container-fluid report-screen">
+    <h6 class="reports-title">
+        Menu Categories
+    </h6>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <div class="table-responsive">
+                        <table id="dTable" class="table no-select"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    _globalCreateDataTable( {
+            el: 'dTable',
+            pageLength: 30,
+            ajax: {
+                read: '/menu/CategoriesTable',
+                update: '/menu/updateCategory',
+                add: '/menu/addMenuCategory',
+                delete: '/menu/DeleteCategory'
+            },
+            order: [[3, "asc"]],
+            columns: [
+                { data: 'id', title: 'Id', width:'20px', visible: true, edit: 'readonly', create: 'false' },
+                {
+                    data: 'name', title: 'Name', render: (data, type, row) => {
+                        return `<a href='/menu/items?cat=${row.id}'>${data}<//a>`;
+                    }
+                }, 
+                { data: 'number', title: 'Position' },
+                {
+                    data: 'menu_category_type', title: 'Category',
+                    list: { data: [{ id: 1, name: 'Kitchen' }, { id: 2, name: 'Services' }] }
+                },
+                { data: 'is_active', title: 'Active', type: 'bool', dType: 'bool-icon', newRowVal: true },
+            ],
+        }
+    );
+</script>

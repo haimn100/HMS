@@ -1,0 +1,95 @@
+﻿@model List<UserDiscount>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+    int ghostUserId = CacheManager.Instance.GhostUser.id;
+}
+
+<script src="~/js/highchart-3d.js"></script>
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("DISCOUNTS MONTHLY REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT OF")
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card clearfix">
+                <div class="body dataTable-no-header">
+                    <table class="table table-small dataTable" style="width:100%;">
+                        <thead>
+                            <tr>                                
+                                <th>@I18n.T("Id")</th>
+                                <th>@I18n.T("Date")</th>
+                                <th>@I18n.T("Order Id")</th>
+                                <th>@I18n.T("Guest")</th>
+                                <th>@I18n.T("Staff")</th>
+                                <th>@I18n.T("Payment Type")</th>
+                                <th>@I18n.T("Comment")</th>
+                                <th>@I18n.T("Price")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.id</td>
+                                    <td>@item.discount_date.ToShortUIDateTimeString()</td>
+                                    <td>
+                                        @if(item.order_id == 0)
+                                        {
+                                            <text>-</text>
+                                        }
+                                        else
+                                        {
+                                            <a href="/kitchen/order?orderid=@item.order_id">@item.order_id</a>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if(item.user_id == ghostUserId)
+                                        {
+                                            <text>@item.user_name</text>
+                                        }
+                                        else
+                                        {
+                                            <a href="/guest/userprofile?userid=@item.user_id">@item.user_name</a>
+                                        }
+                                    </td>
+                                    <td>@item.staff</td>
+                                    <td>@item.payment_type_id.ToString()</td>
+                                    <td>@item.comment</td>
+                                    <td>$@item.price.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6"></td>
+                                <td align="left" style="font-weight:bold;">@I18n.T("Total"): $@Model.Sum(x=>x.price).ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button data-toggle="modal" data-target="#modalAdd" type="button" class="btn btn-success btn-circle-lg waves-effect waves-circle waves-float pull-right">
+                        <i class="material-icons">add_circle</i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+
+    $("#updateReport").click(function () {
+        var from = $("#fromDate").val();
+        var to = $("#toDate").val();
+        window.location = "/reports/MonthlyDiscount?from=" + from + "&to=" + to;
+    });
+
+</script>

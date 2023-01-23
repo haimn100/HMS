@@ -1,0 +1,104 @@
+﻿@model List<User>
+@{
+    ViewBag.Title = "Immigration Report";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    DateTime _date = (DateTime)ViewBag.Date;
+    ViewBag.HideMenu = true;
+}
+
+<style>
+    table th{
+        width:200px;
+    }
+</style>
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("IMMIGRATION REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("DAILY REPORT OF")
+            <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:70px;" value="@_date.ToShortUIDateString()" /></b>
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card clearfix" style="display:table;">
+                <div class="body dataTable-no-header">
+                    <table class="table table-small">
+                        <thead>
+                            <tr>
+                                <th>CODIGO DEL HOTEL</th>
+                                <th>CODIGO DE CIUDAD</th>
+                                <th>TIPO DOCUMENTO</th>
+                                <th>NÚMERO DE IDENTIFICACION</th>
+                                <th>CODIGO NACIONALIDAD</th>
+                                <th>PRIMER APELLIDO</th>
+                                <th>SEGUNDO APELLIDO</th>
+                                <th>NOMBRE DEL EXTRANJERO</th>
+                                <th>TIPO DE MOVIENTO</th>
+                                <th>FECHA DEL MOVIENTO</th>
+                                <th>LUGAR DE PROCEDENCIA</th>
+                                <th>LUGAR DE DESTINO</th>
+                                <th>FECHA DE NACIMIENTO</th>
+                            </tr>
+                        </thead>
+                    </table>
+                        <table class="table table-small table-bordered dataTable" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Where(x=> x.nationality != "169"))
+                                {
+                                    string firstName = item.name;
+                                    string lastName = item.last_name;
+                                    string birthDate = item.birth_date.HasValue ? item.birth_date.Value.ToShortUIDateString() : "";
+                                    string inOut = item.is_checked_out ? "S" : "E";
+                                    int docType = (int)item.document_type;
+                                    <tr>
+                                        <td>@CacheManager.Instance.AppSettings.hotel_code</td>
+                                        <td>@CacheManager.Instance.AppSettings.city</td>
+                                        <td>@docType</td>
+                                        <td>@item.passport</td>
+                                        <td>@item.nationality</td>
+                                        <td>@lastName</td>
+                                        <td></td>
+                                        <td><a href="/guest/userprofile?userid=@item.id">@firstName</a></td>
+                                        <td>@inOut</td>
+                                        <td>@DateTime.Now.ToShortUIDateString()</td>
+                                        <td>@item.arrival</td>
+                                        <td>@item.destination</td>
+                                        <td>@birthDate</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+    $(".date-picker").change(function () {
+        var to = $("#toDate").val();
+        window.location = "/immigration?date=" + to;
+    });
+
+</script>

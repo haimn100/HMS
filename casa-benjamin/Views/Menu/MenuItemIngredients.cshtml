@@ -1,0 +1,120 @@
+﻿@model MenuItem
+@{Layout = "~/Views/Shared/_AdminLayout.cshtml";}
+
+<style>
+    .group{
+        margin-bottom:10px;
+    }
+    .group > * {
+        margin-right:5px;
+    }
+</style>
+
+<div class="container-fluid report-screen">
+    <h6 class="reports-title">
+        <a href="/admin/categories">Menu</a>  > <a href="/menu/items?cat=@Model.cat_id">@ViewBag.CategoryName</a> > @Model.name
+    </h6>        
+    <div id="theview"></div>
+</div>
+
+<script>
+    let menuItemId = @Model.id;
+    let tables = {};
+    let emptyGroups = [{ position: 1, name:'' }, { position: 2,name:'' }, { position: 3,name:'' }];
+
+    $(document).ready(function () {
+       
+        fetch(`/menu/GetMenuItemIngredientsGroups?id=${menuItemId}`)
+            .then((res) => { return res.json(); })
+            .then((groups) => {
+                groups = groups.length === 0 ? emptyGroups : groups;
+                groups = _.sortBy(groups, 'position');
+
+                for (var i = groups.length; i < 3; i++) {
+                    let pos = groups[groups.length - 1].position + 1;
+                    groups.push({ position: pos, name: groups[groups.length - 1].name});
+                }
+            
+                $.each(groups || [], (i, grp) => {        
+                    let tblId = 'ingTable-' + grp.position;
+                    $("#theview").append(buildRow(tblId, grp));
+                    tables[tblId] = initTable(tblId, menuItemId,grp);
+                });
+            });
+    });
+
+    function updateGroup(node) {
+        $root = $(node).closest('.body');
+        $grp = $root.find('.group');
+        let name = $grp.find(`input.grp-name`).val();
+        let isSingleSelect = $grp.find(`input.grp-is-single`).is(':checked');
+        let groupId = $grp.attr('data-group-id');
+        let tableId = $root.find('table').attr('id');
+
+        fetch('/menu/UpdateMenuItemIngredientGroup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify( {
+                menu_item_id: menuItemId,
+                ingredients_group: name,
+                ingredients_group_number: groupId,
+                ingredients_group_single_select: isSingleSelect
+            })
+        }).then((res) => {
+            if (!res.ok) { alert(res.statusText); }
+            tables[tableId].reload();            
+        });
+    }
+
+    function buildRow(tableId,group) {
+
+        return ` 
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body">
+                        <div data-group-id='${group.position}' class='group'>                           
+                            <label>Group</label>
+                            <input class='grp-name' value='${group.name}' placeholder='Name' type='text'></input>
+                            <input id='grp-${group.name}-is-select' class='grp-is-single form-check-input' ${group.is_single_select ? 'checked':''} type='checkbox'></input>                            
+                            <label for='grp-${group.name}-is-select'>Single Option Group</label>                            
+                            <button class='btn' onclick="updateGroup(this);">Update</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="${tableId}" class="table no-select"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`
+    }
+
+    function initTable(tableId,menuItemId,group) {
+            return _globalCreateDataTable({
+                searching: false,
+                defaultButtons: [],
+                noFooter: true,
+                buttons: [],
+                el: tableId,
+                ajax: {
+                    read: `/menu/GetMenuItemIngredientsTable?menuItemId=${menuItemId}&groupPosition=${group.position}`,
+                    update: '/menu/updateMenuItemIngredient',
+                    add: '/menu/addMenuItemIngredient',
+                    delete: '/menu/deleteMenuItemIngredient'
+                },
+                order: [[2, "desc"]],
+                columns: [
+                    { data: 'id', title: 'Id', visible: false, edit: 'hidden', addRecord: 'hidden' },
+                    { data: 'menu_item_id', title: 'Menu Item',visible: false, list: '/menu/MenuItemsList', edit: 'hidden', addRecord: 'hidden',newRowVal:menuItemId },
+                    { data: 'ingredient_id', title: 'Ingredient', list: '/menu/IngredientsList', edit: 'false' },
+                    { data: 'ingredient_price', title: 'Price', type: 'number' },
+                    { data: 'ingredients_group', title: 'Group', visible: false, edit: 'false', addRecord: 'hidden', newRowVal: group.name },
+                    { data: 'ingredients_group_number', title: 'Group Position', visible: false, edit:'false', addRecord: 'hidden', newRowVal: group.position },
+                    { data: 'ingredients_group_single_select', title: 'Single Option', edit: 'false', type: 'bool', addRecord: 'hidden', visible: false, newRowVal: false },
+                    { data: 'product_weight', title: 'Weight', type: 'number' },
+                    { data: 'product_id', title: 'Product', list: { url: '/inventoryproduct/SelectList', placeholder:'Choose A Product' } },
+                ],
+            });
+    }
+
+</script>

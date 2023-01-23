@@ -1,0 +1,77 @@
+﻿<div class="center-content" ng-controller="HouseKeepingManageController">
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="header clearfix">
+                    <h4 class="pull-left">@I18n.T("Manage HouseKeepers")</h4>
+                </div>
+                <div class="body">
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h5>Add HouseKeeper</h5>
+                            <table class="table">
+                                <tr>
+                                    <td>Name:</td>
+                                    <td><input type="text" id="hkName" /></td>
+                                    <td><button ng-click="addHK()">Add</button></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tr ng-repeat="hk in housekeepers">
+                                    <td>{{hk.name}}</td>
+                                    <td>
+                                        <a href="#" ng-click="delete(hk)">Delete</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    myApp.controller('HouseKeepingManageController', function ($scope, $timeout, $http, $mdDialog) {
+
+
+        $scope.delete = function (hk) {
+            $http.get("/housekeeping/deletehk?id=" + hk.id).then(function (data) {
+                getAllHK();
+            });
+        }
+
+        $scope.addHK = function () {
+            var name = $("#hkName").val();
+            $http.get("/housekeeping/addhk?name=" + name).then(function (data) {
+                getAllHK();
+                $("#hkName").val("");
+            });
+        }
+
+        function getAllHK() {
+            $http.get("/housekeeping/gethousekeepers").then(function (data) {
+                $scope.housekeepers = data.data;
+            });
+        }
+
+        getAllHK();
+
+    });
+</script>
+

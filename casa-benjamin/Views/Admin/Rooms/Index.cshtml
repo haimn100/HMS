@@ -1,0 +1,128 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row clearfix">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+            <div class="header">
+                <h2>
+                    @I18n.T("Rooms")
+                </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table dataTable table-bordered table-striped table-hover js-responsive-table" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Number")</th>
+                                <th>@I18n.T("Floor")</th>
+                                <th>@I18n.T("Type")</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                foreach (var member in UserManager.Instance.GetRooms())
+                                {
+                                    <tr>
+                                        <td><a href="/admin/roombeds?roomid=@member.id">@member.room_number</a></td>
+                                        <td>@member.floor</td>
+                                        <td>@member.room_type_id.ToString()</td>
+                                        @{  int t = (int)member.room_type_id;}
+                                        <td><a href="javascript::void();" onclick="editCategory(@member.id,@member.room_number,@member.floor, @t,'@member.amenities');">@I18n.T("Edit")</a></td>
+                                    </tr>
+                                            }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="categoryEdit" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Edit")</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/admin/roomedit" method="post">
+                            <label for="room_number">@I18n.T("Number")</label>
+                            <div class="form-group">
+                                <div class="form-line">
+                                    <input readonly type="text" name="room_number" class="form-control" placeholder="@I18n.T("Number")" />
+                                    <input type="hidden" name="id" />
+                                </div>
+                            </div>
+
+                            <label for="room_type_id">@I18n.T("Type")</label>
+
+                            <div class="form-group">
+
+                                <select name="room_type_id">
+                                    <option value="1">@I18n.T("Private")</option>
+                                    <option value="2">@I18n.T("Dorm")</option>
+                                    <option value="3">@I18n.T("Suite")</option>
+                                </select>
+
+                            </div>
+
+                            <label for="floor">@I18n.T("Floor")</label>
+
+                            <div class="form-group">
+
+                                <select name="floor">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                </select>
+
+                            </div>
+                            <label>@I18n.T("Amenities")</label>
+
+                            <div class="form-group amenities"> 
+                                <input type="checkbox" class="native-look" name="amenities" value="1" /> TV <br/>
+                                <input type="checkbox" class="native-look" name="amenities" value="2" /> REGRIGADOR<br />
+                                <input type="checkbox" class="native-look" name="amenities" value="3" /> SOFA<br />
+                            </div>
+
+                            <div class="row">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE")</button>
+                                    <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE")</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function editCategory(id, number,floor, type,amenities) {
+        $("#categoryEdit input[name='id']").val(id);
+        $("#categoryEdit input[name='room_number']").val(number);
+        $("#categoryEdit select[name='floor']").val(floor);
+        $("#categoryEdit select[name='room_type_id']").val(type);
+        $(".amenities input").prop("checked", false);
+        if (amenities !== "") {
+            var amm = amenities.split(',');
+            for (var i = 0; i < amm.length; i++) {
+                $(".amenities input[value='"+ amm[i] +"']").prop( "checked", true );
+            }
+        }
+
+        $("#categoryEdit").modal();
+    }
+</script>

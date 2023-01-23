@@ -1,0 +1,151 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .add-quantity-btn{
+        font-size: 12px;
+        background-color: #608f60;
+        color: #fff;
+        border: none;
+        text-align:center;
+    }
+    .remove-quantity-btn {
+        font-size: 12px;
+        background-color: #d94f4f;
+        color: #fff;
+        border: none;
+        text-align: center;
+    }
+    table td {
+        padding: 5px !important; 
+    }
+
+</style>
+
+    <div class="container-fluid report-screen">
+        <h1 class="reports-title">
+            Stock
+        </h1>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body">
+                        <div class="table-responsive">
+                            <table id="productsTable" class="table no-select"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           </div>
+        </div>
+       
+    <script>
+
+       async function addRemoveQuantityFromProduct(isAdd, tableService, row, rowIndex) {
+
+               let units = prompt(`${isAdd ? 'Add' : 'Remove'} Units from ${row.name} | 1 Unit = ${row.weight} grams`, 0);
+               if (units === null) return;
+               if (units <= 0 || isNaN(units)) return "Not a number";           
+
+               units = isAdd ? units : -units;
+               let quantityToAdd = units * row.weight;
+
+                if (!isAdd && (row.quantity_in_stock + quantityToAdd) < 0) {
+                    return "Quantity cannot be bellow zero";
+                }
+
+               let note = prompt(`Add Note`, '');
+
+               let postQuantityReq = await fetch('/inventoryproduct/AddQuantityToProduct', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json'
+                   },
+                   body: JSON.stringify({
+                       productId: row.id,
+                       quantity: quantityToAdd,
+                       note
+                   })
+               });
+
+               if (!postQuantityReq.ok) {                 
+                   return "An error occured, status " + postQuantityReq.status;
+               }
+
+               tableService.updateCellData(rowIndex, 7, row.quantity_in_stock + quantityToAdd);
+                return null;
+           };
+       _globalCreateDataTable({
+                   el: 'productsTable',
+                   ajax: {
+                       read: '/inventoryProduct/allItemsTable',
+                       update: '/inventoryProduct/UpdateProductWarningQuantity'
+                   },
+                   pageLength: 25,
+                   order: [[11, "desc"]],
+                   columns: [
+                       {
+                           sortable:false,
+                           name: 'remove_quantity',
+                           onCellClick: async (tableService, row, rowIndex) => {
+
+                               let error = await addRemoveQuantityFromProduct(false, tableService, row, rowIndex);
+                               if (error) { alert(error); }
+                           },
+                           width: '20px',
+                           html: `<div class='remove-quantity-btn'>Remove</div>`,
+                           edit: false
+                       },
+                       {
+                           sortable:false,
+                           name: 'add_quantity',
+                           onCellClick: async (tableService, row, rowIndex) => {
+                               let error = await addRemoveQuantityFromProduct(true, tableService, row, rowIndex);
+                               if (error) { alert(error); }
+                           },
+                           width: '20px',
+                           html: `<div class='add-quantity-btn'>Add</div>`,
+                           edit: false
+                       },
+                       { data: 'id', title: 'Id', 'visible': false, edit: 'readonly' },
+                       { data: 'supplier_id', width:'200px', 'visible': true, title: 'Supplier', edit: 'readonly', list: { url: '/inventory/suppliers' } },
+                       { data: 'name', title: 'Name', edit: 'readonly' },
+                       { data: 'brand', title: 'Brand', 'visible': false, edit: 'readonly' },
+                       { data: 'code', title: 'Code', 'visible': false, edit: 'readonly' },
+                       { data: 'weight', title: 'Weight', 'visible': false, edit: 'readonly', type: 'number', dType: 'weight' },
+                       {
+                           data: 'quantity_in_stock', title: 'Quantity', type: 'number',edit: 'false',
+                           render: (data, type, row, meta) => {
+                               if (row.weight === 0) return 0;
+                               return `${(data / row.weight).toFixed(1)} (${data}g)`;
+                           }
+                       },
+                       { data: 'quantity_warning_thershold', title: 'Warning', type: 'number', dType: 'weight' },
+                       { data: 'created_at', title: 'Created', dType: 'date', edit:'false', create:'false' }
+                   ],
+                   filters: [
+                    {
+                        title: 'Status',
+                        type: 'select',
+                        param:'show_only',
+                        options: [
+                            { id: '', name: 'All' },
+                            { id: 'warnings', name: 'Warnings' },
+                        ]
+                    },
+                    {
+                        title: 'Supplier',
+                        type: 'select',
+                        param: 'supplier_id',
+                        emptyValue: '',
+                        options: '/inventory/Suppliers'
+                    }
+                   ],
+                   rowCallback: (row, data) => {                       
+                        if ( data.quantity_in_stock < data.quantity_warning_thershold ) {
+                            $(row).addClass( 'row_warning' );
+                        }
+                   }
+               });         
+    </script>

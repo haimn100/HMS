@@ -1,0 +1,74 @@
+﻿@model List<User>
+@{
+    string dateFormat = DateTimeHelper.GetShortUIDateTimeString();
+    int days = ViewBag.days;
+    var rooms = CacheManager.Instance.Rooms;
+
+}
+
+<div class="center-content">   
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="header clearfix">
+                    <h4 class="pull-left">@I18n.T("Guests")</h4>
+                    <div class="pull-right">
+                        <form action="/home/guests" method="get">
+                            <select class="select2" style="width:200px;" data-no-clear name="days" onchange="$(form).submit();">
+                                <option value="-1" @if (days == -1) { <text> selected="selected" </text> }>@I18n.T("Staying Guests")</option>
+                                <option value="7" @if (days == 7) { <text> selected="selected" </text> }>@I18n.T("Last Week")</option>
+                                <option value="30" @if (days == 30) { <text> selected="selected" </text> }>@I18n.T("Last Month")</option>
+                                <option value="60" @if (days == 60) { <text> selected="selected" </text> }>@I18n.T("Last Two Months")</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+                <div class="body">                   
+                    <table class="table dataTable">
+                        <thead>
+                            <tr>
+                                <th>@I18n.T("Id")</th>
+                                <th data-order="desc">@I18n.T("Check In")</th>
+                                <th>@I18n.T("Check Out")</th>
+                                <th>@I18n.T("Room")</th>
+                                <th>@I18n.T("Bed")</th>
+                                <th>@I18n.T("Name")</th>
+                                <th>@I18n.T("Passport")</th>
+                                <th>@I18n.T("Sex")</th>
+                                <th>@I18n.T("Checked In By")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                UIRoom uiRoom = rooms.FirstOrDefault(x => x.beds.Exists(y => y.bed_id == item.bed_id));
+
+                                <tr>
+                                   <td><a href="/guest/UserProfile?userid=@item.id">@item.id</a></td>
+                                   <td>@item.cidate.ToString(dateFormat)</td>
+                                    <td>@{ 
+                                        if (item.codate.HasValue) {
+                                            <text>@item.codate.Value.ToString(dateFormat)</text>
+                                        }                                        
+                                    }</td>
+                                    <td>
+                                        @if (uiRoom != null)
+                                    { <text>@uiRoom.room.id</text> }
+                                    </td>
+                                    <td>@item.bed_id</td>
+                                    <td>@item.name @item.last_name</td>
+                                    <td>@item.passport</td>
+                                    <td>@item.sex.ToString().Sex()</td>
+                                    <td>@item.checked_in_by</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

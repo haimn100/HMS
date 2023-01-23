@@ -1,0 +1,618 @@
+﻿@{
+    ViewBag.Title = "Calendar";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.Dates;
+    ViewBag.HideMenu = true;
+    Staff user = (Staff)Session["user"];
+
+    var fromDateString = dateQuery.FromOrDefault().ToShortUIDateString();
+    var toDateString = dateQuery.ToOrDefault().ToShortUIDateString();
+
+    var rooms = CacheManager.Instance.Rooms.OrderBy(x => x.room.id).ToList();
+
+}
+
+<style>
+
+    .is-full-true {
+        background: repeating-linear-gradient( 45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px );
+    }
+
+    body {
+        background-color: #fff;
+    }
+
+    .main-container table td {
+        padding: 9px;
+        border: 1px solid #000;
+        font-size: 0.8em;
+    }
+
+    .empty-slot:hover {
+        background-color: aquamarine;
+    }
+
+    .main-container td.slot {
+        min-width: 30px;
+        padding: 0;
+        height: 30px;
+        text-align: center;
+    }
+
+    .main-container td.slot2 {
+        min-width: 30px;
+        padding: 0;
+        text-align: center;
+    }
+
+    .occupied-true-1, .occupied-true-2, .occupied-true-3, .occupied-true-4, .occupied-true-5, .occupied-true-6, .occupied-true-7, .occupied-true-8, .occupied-true-9, .occupied-true-10 {
+        border-right: 0 none !important;
+        border-left: 0 none !important;
+    }
+
+    .occupied-true-1 {
+        background-color: aqua;
+    }
+
+    .occupied-true-2 {
+        background-color: orange;
+    }
+
+    .occupied-true-3 {
+        background-color: darkorchid;
+    }
+
+    .occupied-true-4 {
+        background-color: blue;
+        color: #fff;
+    }
+
+    .occupied-true-5 {
+        background-color: yellow;
+    }
+
+    .occupied-true-6 {
+        background-color: greenyellow;
+    }
+
+    .occupied-true-7 {
+        background-color: red;
+    }
+
+    .occupied-true-8 {
+        background-color: hotpink;
+        border: 0 none;
+    }
+
+    .occupied-true-9 {
+        background-color: maroon;
+        border: 0 none;
+        color: #fff;
+    }
+
+    .occupied-true-10 {
+        background-color: cadetblue;
+        border: 0 none;
+    }
+
+    .color-example {
+        width: 100%;
+        height: 100%;
+    }
+
+    #hidden-table-edit_wrapper, #hidden-table-create_wrapper {
+        display: none !important;
+    }
+</style>
+
+<table id="hidden-table-edit" style="display:none;"></table>
+<table id="hidden-table-create" style="display:none;"></table>
+<div class="row">
+    <div class="col-lg-9">
+        <div class="reports-title">
+            <h1 class="reports-title">@I18n.T("Calendar")</h1>
+
+            <div class="menu">
+                <a href="/reservation?from=@fromDateString&to=@toDateString">List</a>
+            </div>
+        </div>
+        <div class="block-header">
+            <h2 style="margin-top:10px !important;">
+                <b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b>
+                <button id="updateReport">@I18n.T("Update")</button>
+            </h2>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <table class="table-bordered">
+            <tr>
+                <td class="occupied-true-1">1 @I18n.T("Person")</td>
+                <td class="occupied-true-2">2 @I18n.T("People")</td>
+                <td class="occupied-true-3">3 @I18n.T("People")</td>
+                <td class="occupied-true-4">4 @I18n.T("People")</td>
+                <td class="occupied-true-5">5 @I18n.T("People")</td>
+            </tr>
+            <tr>
+                <td class="occupied-true-6">6 @I18n.T("People")</td>
+                <td class="occupied-true-7">7 @I18n.T("People")</td>
+                <td class="occupied-true-8">8 @I18n.T("People")</td>
+                <td class="occupied-true-9">9 @I18n.T("People")</td>
+                <td class="occupied-true-10">10 @I18n.T("People")</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="is-full-true" style="text-align:center;color:#fff;">Full</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="row main-container" style="margin-top:20px;">
+    <div class="col-lg-2" style="padding-right:0;">
+        <table style="height:100px;width:100%;">
+            <tr>
+                <td class="slot" width="80%">@I18n.T("Room")</td>
+                <td class="slot" width="20%">@I18n.T("Beds")</td>
+            </tr>
+        </table>
+        <table style="height:100px;width:100%;">
+            @foreach (var room in rooms)
+            {
+                var roomType = "";
+                switch (room.room.room_type_id)
+                {
+                    case RoomType.Private:
+                        roomType = "Private";
+                        break;
+                    case RoomType.Dorm:
+                        roomType = "Dorm";
+                        break;
+                    case RoomType.PrivateWithTV:
+                        roomType = "Suite";
+                        break;
+                    default:
+                        break;
+                }
+                <tr>
+                    <td class="slot" width="80%" align="left">@room.room.id (@roomType)</td>
+                    <td class="slot" width="20%">@GetNumOfBeds(room)</td>
+                </tr>
+            }
+        </table>
+    </div>
+    <div class="col-lg-10" style="padding-left:0;">
+        <table style="height:100px;width:100%;" class="slots">
+            @{ 
+                var dic = new List<KeyValuePair<int, string>>();
+                int count = 1;
+                DateTime tempFrom = dateQuery.FromOrDefault();
+                while (tempFrom < dateQuery.ToOrDefault())
+                {
+                    if (tempFrom.Month != tempFrom.AddDays(1).Month)
+                    {
+                        dic.Add(new KeyValuePair<int, string>(count, tempFrom.ToString("MMMM, yyyy")));
+                        count = 0;
+                    }
+                    count++;
+                    tempFrom = tempFrom.AddDays(1);
+                }
+                dic.Add(new KeyValuePair<int, string>(count, tempFrom.ToString("MMMM, yyyy")));
+            }
+            <tr>
+                @foreach (var item in dic)
+                {
+                    <td colspan="@item.Key" align="center">@if (item.Key > 3)
+                    {<text>@item.Value</text>}</td>
+                }
+            </tr>
+            <tr>
+                @{ DateTime f = dateQuery.FromOrDefault();}
+                @while (f <= dateQuery.ToOrDefault())
+                {
+                    <td class="slot2">@f.Day</td>
+                    f = f.AddDays(1);
+                }
+            </tr>
+        </table>
+        <table style="height:100px;width:100%;" class="slots calendar">
+
+            @foreach (var room in rooms)
+            {
+                <tr>
+                    @{ DateTime ff = dateQuery.FromOrDefault();
+                        DateTime to = dateQuery.ToOrDefault();
+                    }
+
+                    @while (ff <= to)
+                    {
+                        string date = ff.ToShortUIDateString();
+                        <td class="slot tippy empty-slot" title="@date<br/>Room @room.room.id" data-date="@date" data-room="@room.room.id" data-total-beds="@room.beds.Count"></td>
+                        ff = ff.AddDays(1);
+                    }
+                </tr>
+                        }
+        </table>
+    </div>
+</div>
+
+@if (user.type == UserType.Admin || user.type == UserType.Editor)
+{
+    Html.RenderPartial("~/Views/Admin/Reservation/Modals.cshtml");
+}
+<script>
+
+    let table;
+    $("#updateReport").click(function () {
+        var from = $("#fromDate").val();
+        var to = $("#toDate").val();
+        window.location = "/reservation/calendar?from=" + from + "&to=" + to;
+    });
+
+    var resColors = {};
+    //colorindex 0-3
+    var colorsIndex = 0;
+    $("td[data-res]").each(function (k, v) {
+        $el = $(v);
+        var res = $el.attr("data-res");
+        if (_.isUndefined(resColors[res])) {
+            resColors[res] = "res-color-" + colorsIndex;
+            colorsIndex = colorsIndex === 3 ? 0 : colorsIndex + 1;
+        }
+        $el.addClass(resColors[res]);
+    });
+
+    $(document).ready(function () {
+        fillReservations();
+        tippy('.tippy', {
+            position: 'bottom',
+            animation: 'shift',
+            theme: 'light',
+            arrow: true
+        });
+
+        $(".slots.calendar td").click(function () {
+            let $this = $(this);
+            let reservationsIds = $this.attr('data-res-ids');
+            let room = $this.attr("data-room");
+            let date = $this.attr("data-date");
+            let freeBeds = parseInt($this.attr("data-freebeds"));
+
+            if (reservationsIds) {
+                reservationsIds.split(',').length > 1 ?
+                    showReservationsModal(room,reservationsIds) :
+                    editReservation(room,reservationsIds, freeBeds,date);
+            } else {
+                addReservation(room, date, freeBeds);
+            }
+        });
+
+
+    });
+
+    window.addEventListener('AppTable.Modal.Input.Change', function (ev) {
+        let dateFormat = "DD/MM/YYYY";
+        let { target, val, name, type, form } = ev.detail;
+        if (name === 'res_date' || name === 'res_date_end') {
+            let moment_sDate = moment(form['res_date'], dateFormat);
+            let moment_eDate = moment(form['res_date_end'], dateFormat);
+
+            let isSameDate = moment_sDate.isSame(moment_eDate, dateFormat);
+            let isInvalid = moment_sDate.isAfter(moment_eDate, dateFormat);
+            let diffInDays = (isSameDate || isInvalid) ? 1 : moment_eDate.diff(moment_sDate, 'days');
+
+            if (isInvalid || isSameDate) {
+                target.dispatchEvent(new CustomEvent('AppTable.Modal.Input.Change.Mutate', {
+                    bubbles: true,
+                    detail: {
+                        type: 'date',
+                        name: 'res_date_end',
+                        val: moment_sDate.add(1, 'days').format(dateFormat)
+                    }
+                }));
+            }
+            target.dispatchEvent(new CustomEvent('AppTable.Modal.Input.Change.Mutate', {
+                bubbles: true,
+                detail: {
+                    type: 'number',
+                    name: 'nights',
+                    val: diffInDays
+                }
+            }));
+        }
+    });
+
+    async function showReservationsModal(roomId,ids) {
+        let reservations = await findMany(roomId,ids);
+        let $modal = $("#resAlertModal");
+        let modalBody = generateRerservationTable(roomId, reservations);
+        $modal.find('.modal-body').html(modalBody);
+        $modal.find('table a').click((ev) => {
+            let $el = $(ev.target);
+            let reservationId = $el.attr('data-res-id');
+            let roomId = $el.attr('data-room');
+            setTimeout(() => {
+                editReservation(roomId, reservationId);
+            }, 200);
+        });
+        $modal.modal();
+    }
+
+    async function editReservation(roomId, resId, freebeds,slotDate) {
+        let res = await fetch('/reservation/oneitemtable?reservationid=' + resId);
+        res = await res.json();
+        res = res.data[0];
+
+        let options = {
+            onReady: (srv) => {
+                srv.openRowEditModal(0, {}, { title: `Room ${roomId} ${freebeds > 0 ? `(${freebeds} beds left)` : ''}` });
+            },
+            el: 'hidden-table-edit',
+            ajax: {
+                read: '/reservation/oneitemtable?reservationid=' + resId,
+                update: '/reservation/edit',
+                add: '/reservation/add',
+                delete: '/reservation/remove'
+            },
+            columns: getTableColumns()
+        };
+
+            options.editFormButtons = [
+                {
+                    name: 'new',
+                    title: 'Create New',
+                    onClick: (row, srv) => {
+                        if (freebeds && parseInt(freebeds) === 0) {
+                            alert('There are no beds available');
+                            return;
+                        }
+                        srv.openRowEditModal(-1, {
+                            'res_date': App.Date(slotDate).format(),
+                            'res_date_end': App.Date(slotDate).add(1, 'days').format(),
+                            'room_id': parseInt(roomId),
+                            'number_of_people': 1
+                        }, { title: `Room ${roomId} ${freebeds > 0 ? `(${freebeds} beds left)`:''}` });
+                    }
+                },
+                {
+                    name: 'sendemail',
+                    title: 'Send Confirmation Email',
+                    onClick: function (row, srv) {
+                        if (confirm("Are you sure?")) {
+                            var id = row['res_id'];
+                            $.get("/reservation/sendconfirmation?resID=" + id).done(function () {
+                                alert("Email Sent");
+                            }).fail(function () { alert("There was a problem sending the mail, please contact your administrator"); })
+                        }
+                        return false;
+                    }
+                }  
+            ];
+
+        table = new _globalCreateDataTable(options);
+    }
+
+    async function addReservation(roomId, date, freebeds) {
+        if (freebeds === 0) { alert('room is full'); return;}
+        new _globalCreateDataTable({
+            onReady: (srv) => {
+                srv.openRowEditModal(-1, {
+                    'res_date': App.Date(date).format(),
+                    'res_date_end': App.Date(date).add(1, 'days').format(),
+                    'room_id': parseInt(roomId),
+                    'number_of_people': 1
+                }, { title: `Room ${roomId} ${freebeds > 0 ? `(${freebeds} beds left)` : ''}` });
+            },
+            el: 'hidden-table-create',
+            ajax: {
+                read: '/reservation/allitemstable',
+                add: '/reservation/add'
+            },
+            columns: getTableColumns()
+        });
+
+    }
+
+    function getTableColumns(newRow = {}) {
+        return [
+            { data: 'id', title: 'Id', visible: false, edit: 'hidden', create: 'hidden' },
+            { data: 'res_id', title: 'Res.ID', visible: false, edit: 'readonly', create: 'hidden' },
+
+            { data: 'res_date', title: 'Arrive', dType: 'date', width: '50px', newRowVal: newRow['res_date'] },
+            { data: 'res_date_end', title: 'Depart', dType: 'date', width: '50px', newRowVal: newRow['res_date_end'] },
+            { data: 'nights', title: 'Nights', type: 'number', width: '20px', edit: 'readonly', create: 'readonly', newRowVal: 1 },
+
+            { data: 'res_name', title: 'Name', width: '15%' },
+            { data: 'res_email', title: 'Email' },
+            {
+                data: 'sex', title: 'Gender', visible: false,
+                list: [{ id: true, name: 'Male' }, { id: false, name: 'Female' }]
+            },
+
+            { data: 'number_of_people', title: 'Guests', type: 'number', width: '20px', newRowVal: newRow['num_of_people'] || 1 },
+            { data: 'room_id', title: 'Room', width: '70px', list: '/room/GetRoomsSelectList', newRowVal: newRow['room_id'] || 1 },
+            { data: 'origin', title: 'Travel Agent' },
+
+            { data: 'comment', title: 'Note' },
+            {
+                data: 'status', title: 'Status', width: '30px', list: [
+                    { id: 1, name: 'W', html: `<div class='status-{name}'>{name}</div>` },
+                    { id: 2, name: 'CI', html: `<div class='status-{name}'>{name}</div>` },
+                    { id: 3, name: 'CO', html: `<div class='status-{name}'>{name}</div>` }]
+            },
+
+            { data: 'employee_name', title: 'Employee', visible: false, list: { url: '/staff/all', idField: 'name' } },
+            { data: 'allow_mix_dorm', title: 'Mix Dorm', type: 'bool', visible: false },
+        ]
+    }
+
+    function getTableOptions() {
+
+        let startDate = (row && row.startDate) ? row.startDate : moment().format('DD/MM/YYYY');
+        let endDate = (row && row.endDate) ? row.endDate : moment().add(1, 'days').format('DD/MM/YYYY');
+        let cols = getTableColumns();
+        cols['']
+        return {
+            onReady: (srv) => {
+                srv.openRowEditModal(0);
+            },
+            el: 'hidden-table',
+            ajax: {
+                add: '/reservation/add',
+                delete: '/reservation/remove'
+            },
+            columns: [
+                { data: 'id', title: 'Id', visible: false, edit: 'hidden', create: 'hidden' },
+                { data: 'res_id', title: 'Res.ID', visible: false, edit: 'readonly', create: 'hidden' },
+
+                { data: 'res_date', title: 'Arrive', dType: 'date', width: '50px', newRowVal: startDate },
+                { data: 'res_date_end', title: 'Depart', dType: 'date', width: '50px', newRowVal: endDate },
+                { data: 'nights', title: 'Nights', type: 'number', width: '20px', edit: 'readonly', create: 'readonly', newRowVal: 1 },
+
+                { data: 'res_name', title: 'Name', width: '15%' },
+                {
+                    data: 'sex', title: 'Gender', visible: false,
+                    list: [{ id: true, name: 'Male' }, { id: false, name: 'Female' }]
+                },
+
+                { data: 'number_of_people', title: 'Guests', type: 'number', width: '20px' },
+                { data: 'room_id', title: 'Room', width: '70px', list: '/room/GetRoomsSelectList' },
+                { data: 'origin', title: 'OTA' },
+
+                { data: 'comment', title: 'Note' },
+                {
+                    data: 'status', title: 'Status', width: '30px', list: [
+                        { id: 1, name: 'W', html: `<div class='status-{name}'>{name}</div>` },
+                        { id: 2, name: 'CI', html: `<div class='status-{name}'>{name}</div>` },
+                        { id: 3, name: 'CO', html: `<div class='status-{name}'>{name}</div>` }]
+                },
+
+                { data: 'employee_name', title: 'Employee', visible: false, list: { url: '/staff/all', idField: 'name' } },
+                { data: 'allow_mix_dorm', title: 'Mix Dorm', type: 'bool', visible: false },
+            ]
+        };
+    }
+
+    function generateRerservationTable(roomId, reservations = []) {
+        let rows = _.map(reservations, (res) => {
+
+            return `<tr>
+                        <td><a style='cursor:pointer;' data-dismiss="modal" data-room=${roomId} data-res-id='${res.res_id}'>${res.res_id}</a></td>
+                        <td>${res.res_name}</td>
+                        <td>${res.number_of_people}</td>
+                        <td>${moment(res.res_date).format('DD/MM/YY')}</td>
+                        <td>${moment(res.res_date_end).format('DD/MM/YY')}</td>
+                        <td>${res.status == 2 ? '<span style="color:green;">Checked In</span>' : res.status === 3 ? '<span style="color:red;">Checked Out</span>' :'<span style="color:gray;">Waiting</span>'}</td>
+                    </tr>`;
+        }).join('');
+
+        return `<table class="table">
+                    <thead>
+                        <tr>
+                             <th>Res. ID</th>
+                             <th>Name</th>
+                             <th>Guest</th>
+                             <th>CheckIn</th>
+                             <th>CheckOut</th>
+                             <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+    }
+
+    async function findOne(resId,roomId) {
+        let res = await fetch(`/reservation/findone?id=${resId}&roomId=${roomId}`);
+        if (!res.ok) alert(res.statusText);
+        let data = await res.json();
+        return data;
+    }
+
+    async function findMany(roomId,idsList) {
+        let res = await fetch(`/reservation/findmany?ids=${idsList}&roomId=${roomId}`);
+        if (!res.ok) alert(res.statusText);
+        let data = await res.json();
+        return data;
+    }
+
+    async function fillReservations() {
+        let $calendar = $(".slots.calendar");
+
+        let resRequest = await fetch(`/reservation/list?from=@fromDateString&to=@toDateString`);
+        let reservations = await resRequest.json();
+
+        let roomsRequest = await fetch(`/room/getroomsbeds`);
+        let rooms = await roomsRequest.json();
+
+        let resByRoom = _.groupBy(reservations, (res) => { return res.room_id });
+
+        _.each(resByRoom, (roomRes, roomId) => {
+            let resByDates = _.groupBy(roomRes, (res) => { return res.res_date });
+            let beds = _.where(rooms, { room_id: parseInt(roomId) });
+
+            _.each(resByDates, (resList, date) => {                
+                let _date = moment.utc(date).format('DD/MM/YYYY');
+                let distinctResGroup = _.groupBy(resList, (item) => { return item.res_id; });
+                let totalGuests = 0;
+                _.each(distinctResGroup, (grp, resId) => {
+                    if(grp[0].status !== 3)
+                        totalGuests += grp[0].number_of_people;
+                });
+
+                let freeBeds = beds.length - totalGuests;
+                let resIds = _.pluck(resList, 'res_id');
+
+                let $cell = $calendar.find(`td[data-room='${roomId}'][data-date='${_date}']`);
+                $cell.attr('data-freebeds',freeBeds);
+                $cell.attr('data-num-of-people',totalGuests);
+                $cell.attr('data-total-beds',beds.length);
+                $cell.attr('data-res-ids', resIds.join(','));
+                $cell.addClass('occupied-true-' + totalGuests);
+                if (freeBeds === 0) {
+                    $cell.addClass('is-full-true');
+                }
+
+            });
+        });
+
+    }
+
+</script>
+
+
+@functions{
+    public bool isBetweenDates(DateTime calendarDate, DateTime roomResStartDate, DateTime roomResEndDate)
+    {
+        if ((calendarDate.Ticks >= roomResStartDate.Ticks && calendarDate.Ticks <= roomResEndDate.Ticks))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public int GetNumOfFreeBeds(UIRoom room, int numOfReservationBeds)
+    {
+        int numOfRoomBeds = GetNumOfBeds(room);
+        double occupiedBeds = 0;
+        List<User> users = CacheManager.Instance.Users;
+
+        foreach (var item in room.beds)
+        {
+            if (users.Exists(x => x.bed_id == item.bed_id))
+            {
+                occupiedBeds += item.bed_type_id == BedType.Double ? 0.5 : 1;
+            }
+        }
+
+        return (numOfRoomBeds - (numOfReservationBeds + (int)Math.Ceiling(occupiedBeds)));
+    }
+
+    public int GetNumOfBeds(UIRoom room)
+    {
+        double numOfRoomBeds = 0;
+        foreach (var item in room.beds)
+        {
+            numOfRoomBeds += item.bed_type_id == BedType.Double ? 0.5 : 1;
+        }
+
+        return (int)numOfRoomBeds;
+    }
+}

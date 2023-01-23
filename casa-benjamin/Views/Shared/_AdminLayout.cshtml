@@ -1,0 +1,335 @@
+﻿@{
+    Staff user = (Staff)Session["user"];
+}
+<!DOCTYPE html>
+<html style="background-color:#fff;">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <title>@ViewBag.Title</title>
+
+    @Styles.Render("~/bundles/css")
+    @Scripts.Render("~/bundles/prebodyjs")
+
+    <style>
+        .nav-pills > li > a {
+            border-radius: 0 !important;
+        }
+
+        li.active > a {
+            color: #fff;
+            background-color: #337ab7 !important;
+        }
+    </style>
+
+    @{string lang = "/i18n/langs/" + CacheManager.Instance.AppSettings.language + ".js";}
+    <script src="@lang"></script>
+
+
+</head>
+
+<body class="theme-deep-purple" ng-app="myApp">
+    <div class="overlay"></div>
+
+    <section class="no-print">
+        <nav class="navbar">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a href="javascript:void(0);" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bootNav" aria-expanded="false"></a>
+                    <a style="color:#fff !important;" href="/">HOME</a>
+
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bootNav">
+                    <ul class="nav nav-pills" id="NavBarLinks"></ul>
+                    <ul class="nav navbar-nav navbar-right" id="NavBarActions"></ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </section>
+
+    <section class="content">
+        <i class="material-icons menu-switch-close no-print" onclick="$('body').removeClass('hide-sidebar-menu')">menu</i>
+        @RenderBody()
+        <div class="clearfix">&nbsp;</div>
+    </section>
+
+    <script>
+        let userType = {
+            Admin: @( (user.type == UserType.Admin).ToString().ToLower()),
+            Editor: @((user.type == UserType.Editor).ToString().ToLower()),
+        };
+
+        new AppNavBarMenu({
+            selectorId: 'NavBarLinks',
+            menu: [
+                {
+                    "title": "Daily Reports",
+                    "link": "javascript:void(0);",
+                    "allow": userType.Admin,
+                    "children": [
+                        {
+                            "title": "Income Statement",
+                            "link": "/reports/incomestatement"
+                        },
+                        {
+                            "title": "Dashboard",
+                            "link": "/admin"
+                        },
+                        {
+                            "title": "Checkouts",
+                            "link": "/reports/checkouts"
+                        },
+                        {
+                            "title": "Shifts",
+                            "link": "/reports/shifts"
+                        },
+                        {
+                            "title": "Kitchen Orders",
+                            "link": "/reports/dailyorders"
+                        },
+                        {
+                            "title": "Service Orders",
+                            "link": "/reports/dailyserviceorders"
+                        },
+                        {
+                            "title": "Employees",
+                            "link": "/reports/staffevents"
+                        },
+                        {
+                            "title": "Employees Orders",
+                            "link": "/reports/ordersbystaff"
+                        },
+                        {
+                            "title": "Discounts",
+                            "link": "/reports/dailydiscount"
+                        },
+                        {
+                            "title": "Checkins",
+                            "link": "/reports/checkins"
+                        },
+                        {
+                            "title": "Residents",
+                            "link": "/reports/residents"
+                        }
+                    ]
+                },
+                {
+                    "title": "Monthly Reports",
+                    "link": "javascript:void(0);",
+                    "allow": userType.Admin,
+                    "children": [
+                        {
+                            "title": "Income Statement",
+                            "link": "/reports/monthlyincomestatement"
+                        },
+                        {
+                            "title": "Income Statement2",
+                            "link": "/reports/monthlyincomestatement2"
+                        },
+                        {
+                            "title": "Dashboard",
+                            "link": "/reports/monthlydashboard"
+                        },
+                        {
+                            "title": "Checkouts",
+                            "link": "/reports/monthlycheckouts"
+                        },
+                        {
+                            "title": "Shifts",
+                            "link": "/reports/monthlyshifts"
+                        },
+                        {
+                            "title": "Kitchen Orders",
+                            "link": "/reports/monthlyorders"
+                        },
+                        {
+                            "title": "Service Orders",
+                            "link": "/reports/monthlyserviceorders"
+                        },
+                        {
+                            "title": "Discounts",
+                            "link": "/reports/monthlydiscount"
+                        },
+                        {
+                            "title": "Checkins",
+                            "link": "/reports/monthlycheckins"
+                        },
+                        {
+                            "title": "Deposits",
+                            "link": "/reports/monthlydeposit"
+                        },
+                        {
+                            "title": "Guest Count",
+                            "link": "/reports/guestcount"
+                        }
+                    ]
+                },
+                {
+                    "title": "Expenses/Incomes",
+                    "link": "javascript:void(0);",
+                    "allow": userType.Admin || userType.Editor,
+                    "children": [
+                        {
+                            "title": "Add Expense",
+                            "link": "/ledger/manageexpenses"
+                        },
+                        {
+                            "title": "Add Income",
+                            "link": "/reports/addincomes"
+                        },
+                        {
+                            "title": "Expenses Table",
+                            "link": "/reports/expensestable"
+                        },
+                        {
+                            "title": "Income Table",
+                            "link": "/reports/incometable"
+                        },
+                        {
+                            "title": "Expenses Details Table",
+                            "link": "/reports/expensedetailstable"
+                        },
+                        {
+                            "title": "Income Details Table",
+                            "link": "/reports/incomedetailstable"
+                        },
+                        {
+                            "title": "Expenses Categories",
+                            "link": "/reports/expensecategory"
+                        },
+                        {
+                            "title": "Income Categories",
+                            "link": "/reports/incomecategory"
+                        }
+                    ]
+                },
+                {
+                    "title": "Inventory",
+                    "link": "javascript:void(0);",
+                    "children": [
+                        {
+                            "title": "Products",
+                            "link": "/inventoryproduct"
+                        },
+                        {
+                            "title": "Stock",
+                            "link": "/inventoryproduct/stockpage"
+                        }
+                    ]
+                },
+                {
+                    "title": "Employees",
+                    "link": "javascript:void(0);",
+                     "allow": userType.Admin || userType.Editor,
+                    "children": [
+                        {
+                            "title": "Manage",
+                            "link": "/admin/employees"
+                        },
+                        {
+                            "title": "Add",
+                            "link": "/admin/employeesadd"
+                        }
+                    ]
+                },
+                {
+                    "title": "Kitchen",
+                    "link": "javascript:void(0);",
+                    "children": [
+                        {
+                            "title": "Menu",
+                            "link": "/menu/categories"
+                        },
+                        {
+                            "title": "Ingredients",
+                            "link": "/admin/ingredients"
+                        },
+                        {
+                            "title": "Report",
+                            "link": "/admin/menureport"
+                        },
+                    ]
+                },
+                {
+                    "title": "Reservations",
+                    "link": "javascript:void(0);",
+                    "children": [
+                        {
+                            "title": "Dashboard",
+                            "link": "/reservation"
+                        },
+                        {
+                            "title": "Calendar",
+                            "link": "/reservation/calendar"
+                        }
+                    ]
+                },
+                {
+                    "title": "Accomodation",
+                    "link": "javascript:void(0);",
+                    "children": [
+                        {
+                            "title": "Rooms",
+                            "link": "/admin/rooms"
+                        },
+                        {
+                            "title": "Beds",
+                            "link": "/admin/beds"
+                        }
+                    ]
+                },
+                {
+                    "title": "Settings",
+                    "icon": "settings",
+                    "children": [
+                        {
+                            "title": "@@<small>@user.name</small>",
+                            "link": "#"
+                        },
+                        {
+                            "title": "Edit Settings",
+                            "link": "/admin/appSettings",
+                            "allow": userType.Admin,
+                        },
+                        {
+                            "title": "Log Out",
+                            "link": "/account/logout"
+                        }
+                    ],
+                }
+            ]
+        });
+    </script>
+
+    @{
+        if (TempData["alert"] != null)
+        {
+            if (TempData["alerttype"] != null && (string)TempData["alerttype"] == "success")
+            {
+                <script>
+                    $(document).ready(function () {
+                        alert('@TempData["alert"].ToString()');
+                    });
+                </script>
+            }
+            else
+            {
+                <script>
+                      $(document).ready(function () {
+                        alert('@TempData["alert"].ToString()');
+                    });
+                </script>
+            }
+        }
+    }
+
+    <script src="/js/alertify.js"></script>
+</body>
+
+</html>
+

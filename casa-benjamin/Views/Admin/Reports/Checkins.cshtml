@@ -1,0 +1,96 @@
+﻿@model List<User>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+}
+
+<div class="container-fluid report-screen ">
+    <h1 class="reports-title">@I18n.T("CHECKINS REPORT")</h1>
+    <div class="block-header">
+        <h2>
+         
+            @if (dateQuery.Monthly)
+            {
+                <text>@I18n.T("MONTHLY REPORT")</text>
+                <text><b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b></text>
+            }
+            else
+            {
+                @I18n.T("DAILY REPORT")
+                <text><b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b></text>
+            }
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+</div>
+    
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body dataTable-no-header">
+                        <table class="table table-small dataTable" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Id")</th>
+                                    <th>@I18n.T("Name")</th>
+                                    <th>@I18n.T("Checked In By")</th>
+                                    <th>@I18n.T("Check In")</th>
+                                    <th>@I18n.T("Check Out")</th>
+                                    <th>@I18n.T("Bed")</th>
+                                    <th>@I18n.T("Passport")</th>
+                                    <th>@I18n.T("Sex")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.id</td>
+                                        <td><a href="/guest/UserProfile?userid=@item.id">@item.name</a></td>
+
+                                        <td>@item.checked_in_by</td>
+                                        <td>@item.cidate.ToShortUIDateTimeString()</td>
+                                        <td>
+                                            @{
+                                                if (item.codate.HasValue)
+                                                {
+                                                    <text>@item.codate.Value.ToShortUIDateTimeString()</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>-</text>
+                                                }
+                                            }
+                                        </td>
+                                        <td>@item.bed_id</td>
+                                        <td>@item.passport</td>
+                                        <td>@item.sex.ToString().Sex()</td>
+                                    </tr>
+                                                }
+                            </tbody>
+                        </table>                      
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="timeGraph" class="lg-graph"></div>
+            </div>
+        </div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+       
+        $("#updateReport").click(function () {
+                var from = $("#fromDate").val();
+                var to = $("#toDate").val();
+                window.location = "/reports/Shifts?from=" + from + "&to=" + to;
+            });
+
+        });
+
+</script>

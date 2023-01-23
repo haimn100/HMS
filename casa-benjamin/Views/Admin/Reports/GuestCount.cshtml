@@ -1,0 +1,63 @@
+﻿@{
+    ViewBag.Title = "GuestCount";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<link rel="stylesheet" href="/css/fullcalendar.css">
+<script src="/js/fullcalendar.min.js"></script>
+<div class="calendar-container">
+    <div id="calendar">
+
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+
+        var date = getQueryString("date") === null ? "@DateTime.Now.ToString("yyyy-MM-dd")" : getQueryString("date");
+
+        $('#calendar').fullCalendar({
+            defaultDate: date,
+            header: {
+                left: 'prevYear,nextYear',
+                center: 'title',
+                right: 'prev,next'
+            },
+            events: function (start, end, timezone, callback) {
+                $.ajax({
+                    url: '/reports/GetGuestCount',
+                    data: {
+                        from: start.format("YYYY-MM-DD"),
+                        to: end.format("YYYY-MM-DD")
+                    },
+                    dataType: 'json',
+                    success: function (events) {
+                        callback(events);
+
+                        var avg = 0;
+
+                        if (events.length > 0) {
+
+                            for (var i = 0; i < events.length; i++) {
+                                avg += events[i].title;
+                            }
+
+                            avg /= events.length;
+                        }
+
+                        $("#avgCount").remove();
+                        $(".fc-center").append("<div id='avgCount' style='color:blue;'>@I18n.T("Average"): " + avg.toFixed(1) +"</div>");
+                    }
+                });
+            },
+        });
+    });
+
+
+    function getQueryString(field, url) {
+        var href = url ? url : window.location.href;
+        var reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
+        var string = reg.exec(href);
+        return string ? string[1] : null;
+    };
+</script>

@@ -1,0 +1,1057 @@
+﻿body.modal-open {
+    overflow: auto;
+}
+    body.modal-open[style] {
+        padding-right: 0px !important;
+    }
+
+.modal::-webkit-scrollbar {
+    width: 0 !important; /*removes the scrollbar but still scrollable*/
+    /* reference: http://stackoverflow.com/a/26500272/2259400 */
+}
+
+.navbar-nav .material-icons:hover {
+    color: chartreuse;
+}
+
+.bill-logo{
+    width:87pt;    
+}
+
+.dt-buttons{
+    height:35px;
+}
+
+.report-text-link {
+    color: #fff !important;
+    text-decoration: underline !important;
+}
+
+.calendar-container{
+    background-color:#fff;
+    padding:20px;
+}
+
+.floor-1-color {
+    background-color: #74a4e4;
+}
+
+.floor-2-color {
+    background-color: #eaec64;
+}
+
+.floor-3-color {
+    background-color: #75da4b;
+}
+
+.floor-4-color {
+    background-color: #ffc1a4;
+}
+
+.floor-5-color {
+    background-color: #ef7eeb;
+}
+
+.floor-6-color {
+    background-color: #ffc107;
+}
+
+.floor-7-color {
+    background-color: #36efde;
+}
+
+.floor-8-color {
+    background-color: #f6fbae;
+}
+
+.floor-9-color {
+    background-color: #dadada;
+}
+
+.floor-10-color {
+    background-color: #c5ff15;
+}
+
+.staff-select{
+    width: 200px;
+}
+
+.canceled-item-color{
+    color:red;
+}
+
+.room-container-note-icon{
+    color:red;
+}
+
+.box-url{
+    cursor:pointer !important;
+    text-decoration:none !important;
+}
+
+.hide-sidebar-menu #leftsidebar {
+    display:none;
+}
+
+.info-table {
+    width: 100%;
+}
+
+    .info-table td {
+        padding: 0 10px 0 0;
+    }
+
+
+.menu-switch-open {
+    float: right;
+    margin: -5px 0 0 0 !important;
+    cursor: pointer;
+}
+
+.hide-sidebar-menu section.content {
+    margin-left: 15px !important;
+}
+
+.hide-sidebar-menu .menu-switch-close {
+    display:block;
+    font-size:17px;
+}
+
+.menu-switch-close {
+    display:none;
+    cursor:pointer;
+    position: absolute;
+    top: -25px;
+    left: -15px;
+    background-color: #000;
+    padding: 0px;
+    border-radius: 0 5px 5px 0;
+    padding-right: 3px;
+    color: #fff;
+}
+
+.private-room-indicator {
+    position: absolute;
+    top: -10px;
+    left: 40px;
+    background-color: black;
+    color: #fff;
+    padding: 0 10px;
+}
+
+.order-comment{
+    font-size: 0.8em;
+}
+
+.block-header .datepicker {
+    width: 100px !important;
+}
+
+.block-header .dateMonthPicker {
+    width: 70px;
+}
+
+.dataTable-no-header .dataTables_wrapper .row:first-child{
+    display:none;
+}
+
+.report-screen .info-box .icon {
+    width: 60px;
+}
+
+.lg-graph{
+    height: 400px;
+}
+
+.chart-title{
+    margin-bottom:5px;
+}
+
+.report-main-date {
+    width: 93px !important;
+    background-color: transparent;
+    border: 0;
+    text-decoration: underline;
+    margin: 0 0px;
+    padding: 0 !important;
+}
+
+.dateMonthPicker.report-main-date{
+    width: 65px !important;
+}
+
+.reports-title {
+    margin-top: 0;
+    font-size: 1em;
+    color: #fff;
+    background-color: #3f51b5;
+    padding: 10px;
+    display:flex;
+    font-weight: bold;
+}
+
+    .reports-title h1{
+        margin:0;
+        font-size:1em;
+        padding:0;
+        align-self:center;
+    }
+    .reports-title > .menu {
+        margin-left: auto;
+        color: #fff;
+    }
+
+        .reports-title > .menu > a{
+            color:#fff;
+            text-decoration:underline;
+            font-weight:normal;
+        }
+
+        .table.table-small {
+            font-size: 0.8em;
+        }
+
+.table.table-small th{
+    font-weight: normal !important;
+}
+
+.table tr.total td{
+    font-weight:bold;
+}
+
+.card .header h1 {
+    margin: 0;
+    font-size: 1em;
+    font-weight: normal;
+    color: #111;
+}
+
+.checkouts .table.table-small {
+    font-size: 0.7em;
+}
+
+.table-bordered tbody tr td, .table-bordered thead tr th {
+    padding: 5px;
+    font-size: 12px;
+}
+
+input[type='text'] {
+    padding-left: 5px;
+}
+
+select.full-width{
+    width:100% !important;
+}
+
+.dataTable tr.selected {
+    background-color: #7fffd4 !important;
+}
+
+.dataTable.no-select tr.selected {
+    background-color: transparent !important;
+}
+
+    .dataTable.no-select tr.selected:hover {
+        background-color: transparent !important;
+    }
+
+.rotate-hover-45:hover{
+    transform:rotate(-45deg);
+}
+
+.dt-row-edit {
+    cursor:pointer;
+}
+
+form .row-nodes > div{
+    height: 26px;
+}
+
+input.native-look{
+    position: initial !important;
+    left:initial !important;
+    opacity: 1 !important;
+}
+
+.readonly label{
+    opacity: 0.7;
+}
+
+.dataTable tr.selected:hover {
+    background-color: #7fffd4 !important;
+}
+
+    table .total-row td{
+        font-size:1.2em;
+        font-weight:bold;
+    }
+
+    .cashier-btn{
+        font-size:10px !important
+    }
+
+form .date-picker{
+    border:0 none;
+}
+
+.room-container{
+    border: 1px solid #ccc;
+    padding:20px;
+    position:relative;
+    min-height:111px;
+}
+
+.room-container .card{
+    margin-bottom:0;
+}
+
+.bed-container {
+    font-size: 2.5em;
+    display: inline-block;
+    cursor: pointer;
+    padding-right:20px;
+    position: relative;
+    margin-bottom: 20px;
+    vertical-align:top;
+}
+
+    .bed-container button {
+        padding: 0;
+        border: 0 none;
+        background-color: transparent;
+        position:relative;
+    }
+
+.room-container .room-container-num {
+    width: 30px;
+    text-align: center;
+    background-color: #000;
+    color: #fff;
+    font-weight: bold;
+    position: absolute;
+    top: -5px;
+    left: -8px;
+}
+
+.room-container.card .header{
+    padding:0;
+    border:0 none;
+}
+
+    .room-container.card .header .header-dropdown {
+        position: absolute;
+        top: -13px;
+        right: -8px;
+        list-style: none;
+    }
+
+.room-container .bed-container-num {
+    font-size: 0.5em; 
+    font-weight: bold;
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    border: 1px solid #ccc;
+    z-index: 2;
+    margin-top: -7px;
+}
+
+.room-container .bed-container-num.double-1{
+    margin-bottom: 5px;
+}
+
+    .room-container .bed-container-num.double-2 {
+        margin-top:2px;
+    }
+
+.room-container .room-container-options-icon {
+    right: 0;
+    top: 0;
+    color: #aaa;
+    cursor:pointer;
+}
+
+.bed-container.bed-type-2 .bed-container-num {
+    border: 1px dotted #84ff84;
+}
+
+.room-container .room-notification-icons {
+    position: absolute;
+    left: -10px;
+    top: 20px;
+}
+
+
+.room-container-reservation-icon {
+    color: #000080;
+}
+
+.room-container .room-container-cleaning {
+    color: green;
+}
+
+.reservation-info{
+    font-size: 1.3em;
+}
+
+.bed-reservation {
+   
+    -moz-opacity: 0.3;
+    /* Safari 1.x */
+    -khtml-opacity: 0.3;
+    /* Good browsers */
+    opacity: 0.3;
+}
+
+.female-color, .sex-false-color {
+    color:#ff007f !important;
+}
+
+.male-color, .sex-true-color {
+    color: #0029ff !important;
+}
+
+.bed-container-num.sex-false-color {
+    background-color: #ff007f !important;
+    color: #fff !important;
+}
+
+.bed-container-num.sex-true-color {
+    background-color: #0029ff !important;
+    color:#fff !important;
+}
+
+.filter-pane {
+    margin:0 15px;
+    margin-bottom: 20px;
+    position:relative;
+}
+
+    .filter-pane .sexCount {
+        position: absolute;
+        right: 0;
+        font-size: 27px;
+    }
+
+    .filter-pane .filter-room-number, .filter-pane .filter-bed-number {
+        width: 50px;
+    }
+
+    .filter-pane .filter-item{
+        float:left;
+        margin-right:15px;
+    }
+
+
+.videoContainer {
+    height: 320px;
+    width: 444px; 
+    margin-bottom: 10px;
+}
+
+    .videoContainer img {
+        border: 2px solid #ccc;
+        background-color: grey;
+    }
+
+video {
+    width: 96%;
+    height: 100%;
+    border: 2px solid #ccc;
+    background-color: grey;
+}
+
+select, button, input {
+    outline-style: none !important;
+    -webkit-user-select: none !important; /* Chrome all / Safari all */
+    -moz-user-select: none !important; /* Firefox all */
+    -ms-user-select: none !important; /* IE 10+ */
+    user-select: none !important; /* Likely future */
+}
+
+.tooltip-user-image{
+    height:100px;
+}
+
+.tooltip-container{
+    padding: 10px;
+}
+
+.tooltip-container img {
+    border: 1px solid #aaa;
+}
+
+.kitchen-container{
+    width: 100%;
+    margin: 0 auto;
+    padding:0 15px;
+    margin-bottom: 20px;
+}
+
+    .kitchen-container .main-menu {
+        background-color:#fff;
+        margin-top: 10px;
+        padding:10px 10px 20px 10px;
+        border-radius: 5px;
+    }
+
+.kitchen-cashier,.kitchen-menu{
+    min-height: 400px;
+}
+
+.kitchen-cashier .order-item-description{
+	font-size: 1.5em;
+}
+
+.kitchen-menu-list > li {
+    float: left;
+    margin: 0 0 10px 10px;
+    width:18%;
+}
+
+.kitchen-menu ul li .menu-button {
+    width: 100%;
+    height: 100px;
+    font-size:15px !important;
+    white-space:normal !important;
+    background-color:#226ad6;
+}
+
+        .kitchen-menu ul li > button {
+            color: #fff !important;
+        }
+
+.ing-group-name {
+    padding-left: 11px;
+    color: #4caf50;
+    text-decoration: underline;
+}
+
+.kitchen-menu .menu-item button{
+    color:#fff !important;
+}
+
+
+.kitchen-menu .ingredients-menu li, .other-item-menu li {
+    padding: 2px 10px;
+}
+
+.kitchen-menu .dropdown-menu > li{
+    float:left;
+}
+
+.kitchen-menu .ingredients-menu li label{
+    font-weight: bold;
+    font-size: 15px;
+    padding-left: 25px;
+    padding-top: 1px;
+    color:#000;
+}
+
+.order-user-pic {
+    width: 128px;
+    height: 96px;
+    float: left;
+    margin-right: 10px;
+    border: 2px solid #eee;
+}
+
+.header-home-icon {
+    float: left;
+    margin-top: 13px;
+    margin-right: 5px;
+    color: #fff !important;
+}
+
+.order-user-info-table{
+    width:auto;
+    font-size:0.8em;
+}
+
+.order-user-info-table td{
+    padding: 5px;
+}
+
+.order-table {
+    margin-bottom: 0;
+    font-size:12px;
+}
+
+    .order-table .ingredient-item {
+        font-size: 0.8em;
+        font-weight: normal;
+        color: #aaa;
+    }
+
+    .order-table .order-item-action{
+        cursor:pointer;
+    }
+
+.order-table-container {
+    min-height: 450px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 2px double #eee;
+    margin: 10px 0;
+}
+
+.order-table-container .splitRow{
+    border:0 none;
+}
+
+.order-actions-pane{
+    padding: 5px;
+    margin: 0 0 10px 0;
+}
+
+    .order-actions-pane .order-total {
+        font-size: 1.5em;
+    }
+
+    .order-actions-pane .seperator {
+        width:100%;
+        height:1px;
+        border-top: 1px solid #ccc;
+        margin-bottom: 10px;
+    }
+
+.order-actions-pane .employee-select select{
+    width: 100%;
+}
+
+.order-user-info .user-image{
+    width: 64px;
+    height: 64px;
+}
+
+.pull-left-rmargin{
+    float:left;
+    margin-right: 10px;
+}
+
+.pull-left-lmargin {
+    float: left;
+    margin-left: 10px;
+}
+
+.pull-right-rmargin {
+    float: right;
+    margin-right: 10px;
+}
+
+.pull-right-lmargin {
+    float: right;
+    margin-left: 10px;
+}
+
+li.ac-item img {
+    width: 64px;
+    height: 64px;
+    float: left;
+    border-radius: 35px;
+    margin: 5px 5px;
+    margin-right: 15px;
+}
+
+.ui-menu-item-wrapper {
+    border-bottom: 1px solid #ccc;
+}
+
+li.ac-item > div, li.ac-item {
+    display: table;
+    content: " ";
+    width:100%;
+    padding:3px;
+}
+
+    li.ac-item:hover {
+        background-color: aquamarine;
+        cursor:pointer;
+    }
+
+li.ac-item label{
+    margin-top:10px;
+}
+
+    li.ac-item small {
+        font-size: 1em;
+    }
+
+.ui-autocomplete {
+    width: 360px !important;
+    background-color: #fff;
+    padding: 0;
+    border: 1px solid #ccc;
+}
+
+.order-actions-pane .action-green{
+    background-color:greenyellow !important;
+}
+
+#moveBedForm input{
+    margin-bottom: 5px;
+}
+
+.center-content{
+    width:90%;
+    margin:0 auto;
+}
+
+table .bill-total {
+    font-size: 1.2em;
+    text-align:right;
+    font-weight:bold;
+    text-decoration:underline;
+  
+}
+
+.order-tr{
+    font-weight:bold;
+}
+
+.bill-sum-total small{
+    margin-right: 10px;
+}
+
+
+.print{
+    display:none;
+}
+
+.logout {
+    height: 50px;
+    padding: 15px 15px;
+    font-size: 14px;
+    line-height: 20px;
+    float: left;
+    padding-left: 0;
+    color: bisque;
+}
+
+table .order-no-pay-true td:last-child {
+    color: red;
+}
+
+.order-tr > td{
+    border:0 none !important;
+}
+
+.order-tr a {
+    text-decoration:underline;
+}
+
+#users-ac{
+    width:300px;
+}
+
+.editable{
+    color:blue;
+    text-decoration:underline;
+    cursor:pointer;
+}
+
+    .editable:hover {
+        background-color: #7fffd4 !important;
+    }
+
+.reservation-list{
+    list-style:none;
+}
+
+    .reservation-list .reservation-list-item {
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .reservation-list .reservation-list-item i{
+        float:left;
+        margin-right: 10px;
+    }
+
+    .reservation-list .reservation-date {
+        font-weight:bold;
+    }
+
+
+
+.alert-list {
+    list-style: none;
+}
+
+    .alert-list .alert-list-item {
+        padding: 5px;
+        font-size: 12px;
+    }
+
+        .alert-list .alert-list-item i {
+            float: left;
+            margin-right: 10px;
+        }
+
+    .alert-list .alert-warning-icon{
+         color:orange;
+    }
+
+    .alert-list .alert-text {
+        float:left;
+        width:80%;
+    }
+
+.card .card-info-icon {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    color: #fff;
+    font-size: 20px;
+}
+
+card .card-info-icon:hover {
+    color:yellow;
+}
+
+    .card .card-info-icon.m-black {
+        color: #000;
+    }
+   
+
+.menu-print .menu-print-item {
+    font-size: 16pt;
+    font-weight:bold;
+}
+
+.menu-print .menu-print-comment {
+    font-size: 12pt;
+}
+
+.menu-print .ingredient-item {
+    font-size: 14pt;
+}
+
+
+.res-color-0 {
+    border-top: 3px solid #7318ea !important;
+}
+
+.res-color-1 {
+    border-top: 3px solid #f00 !important;
+}
+
+.res-color-2 {
+    border-top: 2px solid #fcff52 !important;
+}
+
+.res-color-3 {
+    border-top: 2px solid #020202 !important;
+}
+
+table.simple-list td {
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+table.simple-list .total td{
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.simple-list-header {
+    margin-top: 0 !important;
+    font-weight: normal !important;
+}
+
+.no-margin-top{
+    margin-top:0 !important;
+}
+
+.money-color{
+    color:green;    
+}
+
+.discount-color, .expense-color {
+    color: red;
+}
+
+.tight-table td{
+    font-size:0.8em !important;
+}
+
+.info-box .content .text{
+    text-transform:uppercase;
+}
+
+.card-content-header{
+    margin:0;
+    font-size: 1.1em;
+    font-weight:normal;
+    text-decoration:underline;
+}
+
+.table.table-small.m-no-edges tr:first-child td{
+    border-top: 0 none !important;
+}
+
+.table.table-small.m-no-edges tr:last-child td {
+    border-bottom: 0 none !important;
+}
+
+.room-amenities {
+    height: 20px;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    background-color: #619bcb;
+    left: 0;
+    padding: 0 20px 0 20px;
+}
+
+    .room-amenities img {
+        float: left;
+        width:38px;
+        height:20px;
+    }
+
+    @media print {
+        body {
+        background: white;
+        font-size: 100% !important;
+        margin: 5mm 5mm 5mm 5mm !important;
+        font-size: 12pt;
+    }
+
+        /*.order-table td {
+            font-size: 100%;
+        }*/
+
+        .print {
+            display: block;
+        }
+
+        td.print {
+            display: table-cell;
+        }
+
+        table { 
+            width: 100%;
+            page-break-inside: auto;
+            table-layout: fixed !important;
+        }
+
+            table td, table tfoot th {
+                padding: 5px;
+                font-size: 10pt;
+            }
+
+        .navbar, .material-icons, .center-content > a, .search-bar {
+            display: none;
+        }
+
+        .no-print {
+            display: none;
+        }
+
+        .card {
+            padding: 0;
+            margin: 0;
+        }
+
+        h3{
+            font-size: 14pt;
+        }
+
+        section.content{
+            margin:0 !important;
+        }
+
+        @page {
+            size: auto; /* auto is the initial value */
+            margin: 0; /* this affects the margin in the printer settings */
+        }
+
+        .col-print-1 {
+            width: 8%;
+            float: left;
+        }
+
+        .col-print-2 {
+            width: 16%;
+            float: left;
+        }
+
+        .col-print-3 {
+            width: 25%;
+            float: left;
+        }
+
+        .col-print-4 {
+            width: 33%;
+            float: left;
+        }
+
+        .col-print-5 {
+            width: 42%;
+            float: left;
+        }
+
+        .col-print-6 {
+            width: 50%;
+            float: left;
+        }
+
+        .col-print-7 {
+            width: 58%;
+            float: left;
+        }
+
+        .col-print-8 {
+            width: 66%;
+            float: left;
+        }
+
+        .col-print-9 {
+            width: 75%;
+            float: left;
+        }
+
+        .col-print-10 {
+            width: 83%;
+            float: left;
+        }
+
+        .col-print-11 {
+            width: 92%;
+            float: left;
+        }
+
+        .col-print-12 {
+            width: 100%;
+            float: left;
+        }
+
+        .tight-print td{
+            font-size: 7pt !important;
+        }
+
+        .tight-print h2 {
+            font-size: 12pt !important;
+        }
+
+        .tight-print h4 {
+            font-size: 10pt !important;
+        }
+
+        button{
+            display:none !important;
+        }
+
+        a[href]:after {
+            display: none;
+            visibility: hidden;
+        }
+
+        .dataTables_filter, .dt-buttons {
+            display:none;
+        }
+
+    }
+    

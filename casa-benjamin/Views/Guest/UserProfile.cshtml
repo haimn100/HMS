@@ -1,0 +1,302 @@
+﻿@model User
+@{
+    UserBed userLastBed = (UserBed)ViewBag.UserLastBed;
+    UIUserBill bill = (UIUserBill)ViewBag.Bill;
+    Staff user = (Staff)Session["user"];
+}
+
+@section PageScripts{
+    <script src="/js/highcharts.js"></script>
+    <script src="/js/chartHelper.js"></script>
+}
+
+<style>
+    input, button {
+        margin-left: 5px;
+    }
+
+    p {
+        width: 100%;
+    }
+</style>
+<div class="center-content">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+        </div>
+    </div>
+    <style>
+        table td, table tr {
+            border: 0 none !important;
+        }
+
+        input {
+            margin: 0;
+        }
+    </style>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <div class="row clearfix">
+                        <div class="col-lg-6 col-md-4 col-sm-6 col-xs-12">
+                            <form action="/guest/updateprofile" method="post">
+                                <input type="hidden" name="id" value="@Model.id" />
+                                <table class="table">
+                                    <tr>
+                                        @{ 
+                                            string res = Model.res_id.HasValue ? Model.res_id.Value.ToString() : "";
+                                        }
+                                        <td><label>@I18n.T("Reservation Number"):</label></td>
+                                        <td>@res</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Checked In By"):</label></td>
+                                        <td>@Model.checked_in_by</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Name"):</label></td>
+                                        <td><input type="text" name="name" value=" @Model.name" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Last Name"):</label></td>
+                                        <td><input type="text" name="last_name" value=" @Model.last_name" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Nationality"):</label></td>
+                                        <td>
+                                            <select class="select2" name="nationality" id="nationality" data-countries data-default-code="@Model.nationality"></select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Passport"):</label></td>
+                                        <td><input type="text" name="passport" value=" @Model.passport" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Bed"):</label></td>
+                                        <td>@Model.bed_id</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Check In"):</label></td>
+                                        <td>
+                                            @*@if (Model.is_checked_out)
+                                            {*@
+                                                <input type="hidden" name="cidate" value="@Model.cidate.ToShortUIDateTimeString()" />
+                                                <label>&nbsp;@Model.cidate.ToShortUIDateTimeString()</label>
+                                            @*}*@
+                                            @*else
+                                            {
+                                                <input type="text" @if (user.type != UserType.Admin) { <text> style="width:84px;" </text> } name="cidate" class="datetimepicker" id="cidate" value="@Model.cidate.ToShortUIDateTimeString()" />
+                                                if (user.type != UserType.Admin)
+                                                {
+                                                    <label>&nbsp;@Model.cidate.ToString("HH:mm")</label>
+                                                }
+                                            }*@
+                                        </td>
+                                    </tr>
+                                    @if (Model.is_checked_out)
+                                    {
+                                        <tr>
+                                            <td><label>@I18n.T("Checked Out"):</label></td>
+                                            <td>@Model.codate.Value.ToShortDateString()</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td><label>@I18n.T("Check Out"):</label></td>
+                                            <td>
+                                                <input disabled="disabled" type="text" name="intended_codate" data-minDate="@Model.intended_codate.AddDays(1).ToShortUIDateString()" class="date-picker" id="intended_codate" value="@Model.intended_codate.ToShortUIDateString()" />
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><label>@I18n.T("Email"):</label></td>
+                                        <td><input type="text" name="email" value="@Model.email" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Sex"):</label></td>
+                                        <td>
+                                            <select name="sex">
+                                                <option value="true" @if (Model.sex) { <text> selected="selected" </text> }>@I18n.T("Male")</option>
+                                                <option value="false" @if (!Model.sex) { <text> selected="selected" </text> }>@I18n.T("Female")</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>@I18n.T("Price For Night"):</label></td>
+                                        <td><input type="number" min="0" name="pricePerNight" value="@userLastBed.price" /></td>
+                                    </tr>
+                                    @if (CacheManager.Instance.AppSettings.RequireImmigrationInfo)
+                                    {
+                                        string bdate = Model.birth_date.HasValue ? Model.birth_date.Value.ToShortUIDateString() : "";
+
+                                        <tr>
+                                            <td><label>@I18n.T("Birth Date"):</label></td>
+                                            <td><input type="text" name="birth_date" class="date-picker" data-format="mm/dd/yy" value="@bdate" /></td>
+                                        </tr>
+
+                                        <tr>
+                                            <td><label>@I18n.T("Arriving From"):</label></td>
+                                            <td>
+                                                <select class="select2" name="arrival" id="arrival" required data-countries-cities data-default-code="@Model.arrival"></select>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td><label>@I18n.T("Destination"):</label></td>
+                                            <td>
+                                                <select class="select2" name="destination" id="destination" required data-countries-cities data-default-code="@Model.destination"></select>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td><label>@I18n.T("Profession"):</label></td>
+                                            <td><input type="text" name="profession" value="@Model.profession" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </table>
+
+                                <p>
+                                    <a href="/guest/bill?userid=@Model.id" style="width:100px;margin:0;" class="btn bg-blue-grey btn-block waves-effect pull-left-rmargin">@I18n.T("Bill")</a>
+                                    @if (user.type == UserType.Editor || user.type == UserType.Admin)
+                                    {
+                                        <button type="submit" style="width:100px;margin-top:0;" class="btn bg-green btn-block waves-effect pull-left-rmargin">@I18n.T("Update")</button>
+                                    }
+                                    @if(user.type == UserType.Admin)
+                                    {
+                                        var resident = UserManager.Instance.GetResident(Model.id);
+                                        <input type="checkbox" onclick="setResident();" class="filled-in" id="resident" name="resident" @if (resident != null) { <text> checked="checked" </text> } />
+                                        <label for="resident" style="margin-left:10px;">@I18n.T("Resident")</label>
+                                        <a style="width:118px;margin-top:0;" onclick="deleteuser(@Model.id);" class="btn bg-red btn-block waves-effect pull-left-rmargin">@I18n.T("Delete Guest")</a>
+                                    }
+                                </p>
+
+                            </form>
+                        </div>
+                        <div class="col-lg-6 col-md-8 col-sm-8 col-xs-12" style="text-align:center;">
+                            <div class="card">
+                                <div class="body">
+                                    <img style="width:420px;height:320px;border:1px solid #ccc;" src="/guestimages/@Model.pic" />
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="info-box bg-light-blue hover-expand-effect">
+                                <div class="icon">
+                                    <i class="material-icons">brightness_3</i>
+                                </div>
+                                <div class="content">
+                                    <div class="text">@I18n.T("TOTAL NIGHTS SPENT")</div>
+                                    <div class="number">
+                                        @bill.Rooms.Sum(x => x.Nights)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="info-box bg-light-green hover-expand-effect">
+                                <div class="icon">
+                                    <i class="material-icons">kitchen</i>
+                                </div>
+                                <div class="content">
+                                    <div class="text">@I18n.T("KITCHEN")</div>
+                                    <div class="number">
+                                        $@bill.KitchenTotal.ToString("N0")
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="info-box bg-light-green hover-expand-effect">
+                                <div class="icon">
+                                    <i class="material-icons">kitchen</i>
+                                </div>
+                                <div class="content">
+                                    <div class="text">@I18n.T("ACCOMODATION")</div>
+                                    <div class="number">
+                                        $@bill.RoomTotal.ToString("N0")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="header">
+                                    <h2>@I18n.T("Accomodation VS Kitchen")</h2>
+                                </div>
+                                <div class="body">
+                                    <div id="spendingPie" style="min-height:200px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        @if(user.type != UserType.Admin && user.type != UserType.Editor)
+        {
+            <text>$("input,select").attr("disabled","disabled");</text>
+        }
+</script>
+
+<script>
+
+    $(document).ready(function () {
+        var totalAccomodation = @bill.RoomTotal;
+        var totalKitchen = @bill.KitchenTotal;
+
+        var series = getPie(totalAccomodation, totalKitchen);
+        ChartHelper.pie('spendingPie', '', series, { dataLabelColor: '#000', showInLegend: true, enableDataLables: false});
+    });
+
+    function setResident() {
+        var isResident = $("#resident").is(":checked");
+        $.get("/guest/setResident?state=" + isResident + "&userid=@Model.id");
+    }
+
+    function updateCIDate() {
+        var id = @Model.id;
+        var date = $("#cidate").val();
+        $.get("/guest/UpdateUserCheckInDate?date=" + date + "&userId=" + id)
+            .done(function () {
+                alertify.alert("Success");
+             })
+            .fail(function () {
+                alertify.alert("@I18n.T("There was a problem updating the date")");
+            });
+    }
+
+    function deleteuser(id) {
+        if (confirm("@I18n.T("Are you sure you want to permanently delete this guest from the system?")")) {
+            window.location = "/guest/delete?id=" + id;
+        }
+        return false;
+    }
+
+    function getPie(accomodation,kitchen) {
+
+        var seriesData = { name: "", data: [] };
+
+        seriesData.data.push({
+            name: "@I18n.T("Kitchen")",
+            y: kitchen
+        });
+
+        seriesData.data.push({
+            name: "@I18n.T("Accomodation")",
+            y: accomodation
+        });
+
+        return [seriesData];
+    }
+</script>

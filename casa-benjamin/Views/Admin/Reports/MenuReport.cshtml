@@ -1,0 +1,207 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = @I18n.T("Dashboard");
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    string kitchenOrdersUrl = (dateQuery.Monthly ? "/reports/monthlyorders" : "/reports/dailyorders") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1": Request.Url.Query);
+    string servicesOrdersUrl = (dateQuery.Monthly ? "/reports/monthlyserviceorders" : "/reports/dailyserviceorders") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1" : Request.Url.Query);
+    string kitchenCanceledOrdersUrl = kitchenOrdersUrl + "&datatable-search=canceled";
+    string servicesCanceledOrdersUrl = servicesOrdersUrl + "&datatable-search=canceled";
+    string checkOutUrl = (dateQuery.Monthly ? "/reports/monthlycheckouts" : "/reports/checkouts") + Request.Url.Query;
+    string checkInsUrl = (dateQuery.Monthly ? "/reports/monthlycheckins" : "/reports/checkins") + Request.Url.Query;
+    string menuItemDetailUrl = (dateQuery.Monthly ? "/reports/MonthlyMenuItemDetails" : "/reports/DailyMenuItemDetails") + (string.IsNullOrEmpty(Request.Url.Query) ? "?s=1" : Request.Url.Query);
+    string guestCountUrl = (dateQuery.Monthly ? "/reports/GuestCount" : "/reports/guestlist") + "?date=" + dateQuery.FromOrDefault().ToString("yyyy-MM-dd");
+    bool hasGuestCountUrl = dateQuery.Monthly || (dateQuery.From == dateQuery.To);
+}
+
+<div class="container-fluid report-screen" ng-controller="KitchenItemsController" ng-cloak>
+    <h1 class="reports-title">
+        @if (dateQuery.Monthly) { <text>@I18n.T("MONTHLY")</text> }
+else
+{<text>@I18n.T("DAILY")</text> } @I18n.T("REPORT")
+    </h1>
+    <div class="block-header">
+        <h2>
+            @if (dateQuery.Monthly)
+            {
+                @I18n.T("FOR") 
+                <text><b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b></text>
+            }
+            else
+            {
+                @I18n.T("DAILY REPORT")
+                <text><b><input type="text" id="fromDate" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.FromOrDefault().ToShortUIDateString()" /></b> - <b><input id="toDate" type="text" class="date-picker report-main-date" style="width:100px;" value="@dateQuery.ToOrDefault().ToShortUIDateString()" /></b></text>
+            }
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+</div>
+<div ng-if="loading">
+
+  <div class="preloader pl-size-xl">
+            <div class="spinner-layer">
+                <div class="circle-clipper left">
+                    <div class="circle"></div>
+                </div>
+                <div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div ng-if="error">
+        {{errorText}}
+    </div>
+    <div ng-if="!loading">
+        <div class="row">
+            <div class="col-lg-12 col-xs-12">
+                <div class="card" style="min-height:380px;">
+                    <div class="header">
+                        <h2>@I18n.T("Most Popular Kitchen Items")</h2>
+                    </div>
+                    <div class="body">
+                        <table id="kitchenTable" class="table table-small dataTable">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Menu Item")</th>
+                                    <th>@I18n.T("Amount")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="item in popularMenuItems">
+                                    <td><a href="@menuItemDetailUrl&menuItemId={{item.menu_item_id}}">{{item.menu_category_name}} > {{item.menu_item_name}}</a></td>
+                                    <td>{{item.total}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-xs-12">
+                <div class="card" style="min-height:380px;">
+                    <div class="header">
+                        <h2>@I18n.T("Most Popular Services Items")</h2>
+                    </div>
+                    <div class="body">
+
+                        <table id="servicesTable" class="table table-small dataTable">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("Menu Item")</th>
+                                    <th>@I18n.T("Amount")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="item in popularServicesMenuItems">
+                                    <td><a href="@menuItemDetailUrl&menuItemId={{item.menu_item_id}}">{{item.menu_category_name}} > {{item.menu_item_name}}</a></td>
+                                    <td>{{item.total}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>        
+    </div>
+
+</div>
+
+<script>
+                var monthly = @dateQuery.Monthly.ToString().ToLower();
+                var from = $("#fromDate").val();
+                var to = $("#toDate").val();
+                var query = "from=" + from + "&to=" + to + "&monthly=" + monthly;
+
+                myApp.controller('KitchenItemsController', function ($scope, $timeout, $http) {
+                    $scope.loading = true;
+                    $scope.error = false;                    
+                    $scope.isMonthOrNotOneDay = monthly || (from !== to); 
+
+
+                    function getPopularMenuItems() {
+                        $scope.loading = true;
+
+                        $http({
+                            method: 'GET',
+                            url: '/reports/GetOrderItemsCountList?catType=1&' + query
+                        }).then(function (response) {
+                            $scope.popularMenuItems = response.data;
+                            $scope.loading = false;
+
+                            $timeout(function () {
+                                $("#kitchenTable").DataTable({
+                                    "order": [[1, "desc"]],
+                                    dom: 'Bfrtip',
+                                    buttons: [
+                                        'copy', 'csv', 'excel', 'pdf',
+                                        {
+                                            extend: 'print',
+                                            text: 'Print',
+                                            title: "",
+                                            autoPrint: true,
+                                            footer: true,
+                                            customize: function (win) {
+                                                $(win.document.body)
+                                                    .css('font-size', '10pt')
+                                                    .css('margin', '20px');
+
+                                                $(win.document.body).find('tfoot tr')
+                                                    .addClass('total-row');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+
+                        }, function (response) {
+                            console.error(response.data);
+                            });
+
+                        $http({
+                            method: 'GET',
+                            url: '/reports/GetOrderItemsCountList?catType=2&' + query
+                        }).then(function (response) {
+                            $scope.popularServicesMenuItems = response.data;
+                            $scope.loading = false;
+
+                            $timeout(function () {
+                                $("#servicesTable").DataTable({
+                                    "order": [[1, "desc"]],
+                                    dom: 'Bfrtip',
+                                    buttons: [
+                                        'copy', 'csv', 'excel', 'pdf',
+                                        {
+                                            extend: 'print',
+                                            text: 'Print',
+                                            title: "",
+                                            autoPrint: true,
+                                            footer: true,
+                                            customize: function (win) {
+                                                $(win.document.body)
+                                                    .css('font-size', '10pt')
+                                                    .css('margin', '20px');
+
+                                                $(win.document.body).find('tfoot tr')
+                                                    .addClass('total-row');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+
+                        }, function (response) {
+                            console.error(response.data);
+                        });
+                    }
+                  
+                    getPopularMenuItems();
+
+                    $("#updateReport").click(function () {
+                        var from = $("#fromDate").val();
+                        var to = $("#toDate").val();
+                            window.location = "/admin/menureport?from=" + from + "&to=" + to;
+                       
+                    });
+    });
+</script>

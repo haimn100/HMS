@@ -1,0 +1,302 @@
+﻿@model Dictionary<string,object>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ReportDateQuery dateQuery = (ReportDateQuery)ViewBag.DateQuery;
+
+    List<CheckOut> checkouts = (List<CheckOut>)Model["checkouts"];
+    Staff user = (Staff)Session["user"];
+
+    var rooms = CacheManager.Instance.Rooms;
+
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">@I18n.T("CHECKOUTS MONTHLY REPORT")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT") 
+            <b><input type="text" id="fromDate" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.FromOrDefault().ToShortUIMonthlyDateString()" /></b> - <b><input id="toDate" type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@dateQuery.ToOrDefault().ToShortUIMonthlyDateString()" /></b>
+            <button id="updateReport">@I18n.T("Update")</button>
+        </h2>
+</div>
+
+        <!-- Widgets -->
+        <div class="row clearfix">
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+                <div class="info-box bg-green hover-expand-effect">
+                    <div class="icon">
+                        <i class="material-icons">attach_money</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("TOTAL REVENUE")</div>
+                        <div class="number">$@checkouts.Sum(x => x.total).ToString("N0")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+                <div class="info-box bg-cyan hover-expand-effect">
+                    <div class="icon">
+                        <i class="material-icons">person_outline</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("TOTAL CHECKOUTS")</div>
+                        <div class="number count-to" data-from="0" data-to="@checkouts.Count" data-speed="1000" data-fresh-interval="20"></div>
+                    </div>
+                </div>
+            </div>         
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+                <div class="info-box bg-light-green hover-expand-effect">
+                    <div class="icon">
+                        <i class="material-icons">brightness_3</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("AVG. NIGHTS/PERSON")</div>
+                        <div class="number">@{
+                            var avgnight = ((double)Model["averageNights"]).ToString("N1");
+                        }@avgnight</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+                <div class="info-box bg-green hover-expand-effect">
+                    <div class="icon">
+                        <i class="material-icons">attach_money</i>
+                    </div>
+                    <div class="content">
+                        <div class="text">@I18n.T("AVG. SPENDING")</div>
+                        <div class="number">$@{ var spend = ((double)Model["averageSpend"]).ToString("N0");}@spend</div>
+                    </div>
+                </div>
+            </div>
+            </div>
+    <div class="row clearfix">
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL KITCHEN")</div>
+                    <div class="number">$@checkouts.Sum(x => x.total_kitchen).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL ACCOMODATION")</div>
+                    <div class="number">$@checkouts.Sum(x => x.total_accommodation).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-green hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL SERVICES")</div>
+                    <div class="number">$@checkouts.Sum(x => x.total_services).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-xs-12">
+            <div class="info-box bg-red hover-expand-effect">
+                <div class="icon">
+                    <i class="material-icons">attach_money</i>
+                </div>
+                <div class="content">
+                    <div class="text">@I18n.T("TOTAL DISCOUNTS")</div>
+                    <div class="number">$@checkouts.Sum(x => x.total_discount).ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <!-- #END# Widgets -->
+        
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card checkouts">
+                    <div class="body">
+                        <table class="table table-small table-bordered" data-title="@I18n.T("Checkouts Report")" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>@I18n.T("In")</th>
+                                    <th>@I18n.T("Out")</th>
+                                    <th class="no-sort">@I18n.T("Emp.")</th>
+                                    <th>@I18n.T("Guest")</th>
+                                    <th width="20">@I18n.T("Room")</th>
+                                    <th width="20">@I18n.T("Bed")</th>
+                                    <th>@I18n.T("Nights")</th>
+                                    <th>@I18n.T("Price/N.")</th>
+                                    <th>@I18n.T("Accom").</th>
+                                    <th>@I18n.T("Kitchen")</th>
+                                    <th>@I18n.T("Services")</th>
+                                    <th>@I18n.T("Discount")</th>
+                                    <th>@I18n.T("Cash")</th>
+                                    <th>@I18n.T("Credit")</th>
+                                    <th>@I18n.T("Cash Deposit")</th>
+                                    <th>@I18n.T("Credit Deposit")</th>
+                                    <th>@I18n.T("Total")</th>
+                                   
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in checkouts)
+                                {
+                                    UIRoom uiRoom = rooms.FirstOrDefault(x => x.beds.Exists(y => y.bed_id == item.bed_id));
+                                    <tr>
+                                        <td>@item.check_in_date.ToShortUIDateTimeString()</td>
+                                        <td>@item.check_out_date.ToShortUIDateTimeString()</td>
+                                        <td>@item.staff</td>
+                                        <td><a target="_blank" href="/guest/userprofile?userid=@item.user_id">@item.user_name</a></td>
+                                        <td>
+                                            @if (uiRoom != null)
+                                        { <text>@uiRoom.room.id</text> }
+                                    </td>
+                                    <td>@item.bed_id</td>
+                                    <td>@item.total_nights.ToString("N0")</td>
+                                    <td>@item.price_per_night</td>
+                                    <td>@item.total_accommodation.ToString("N0")</td>
+                                    <td>@item.total_kitchen.ToString("N0")</td>
+                                    <td>@item.total_services.ToString("N0")</td>
+                                    <td>@item.total_discount.ToString("N0")</td>
+                                    <td>@item.total_cash.ToString("N0")</td>
+                                    <td>@item.total_credit.ToString("N0")</td>
+                                    <td>@item.cash_deposit.ToString("N0")</td>
+                                    <td>@item.credit_deposit.ToString("N0")</td>
+                                    <td>@item.total.ToString("N0")</td>
+                                    
+                                </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="6"></td>
+                                    <td>@checkouts.Sum(x => x.total_nights).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.price_per_night).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total_accommodation).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total_kitchen).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total_services).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total_discount).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total_cash).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total_credit).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.cash_deposit).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.credit_deposit).ToString("N0")</td>
+                                    <td>@checkouts.Sum(x => x.total).ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>                      
+                    </div>
+                </div>
+            </div>            
+        </div>
+        
+        <div class="row @if (user.type != UserType.Admin) { <text>hidden</text> } ">
+            <div class="col-lg-4 col-xs-12">
+                <div class="card">
+                    <div class="body bg-teal">
+                        <div class="font-bold m-b--35">@I18n.T("REVENUE")</div>
+                        <ul class="dashboard-stat-list">
+                            <li>
+                                @I18n.T("Kitchen And Services")
+                                <span class="pull-right"><b>$@{ string t1 = ((double)Model["totalOrders"]).ToString("N0");}@t1</b></span>
+                            </li>
+                            <li>
+                                @I18n.T("Accomodation")
+                                <span class="pull-right"><b>$@{ string t2 = ((double)Model["totalAccomodation"]).ToString("N0");}@t2</b></span>
+                            </li>
+                            <li>
+                                @I18n.T("Discount")
+                                <span class="pull-right"><b>-$@{ string t4 = ((double)Model["totalDiscount"]).ToString("N0");}@t4</b></span>
+                            </li>
+                            <li>
+                                @I18n.T("Total")
+                                <span class="pull-right"><b>$@{ string t3 = ((double)Model["total"]).ToString("N0");}@t3</b></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-xs-12">
+                <div class="card">
+                    <div class="body bg-teal">
+                        <div class="font-bold m-b--35 chart-title">@I18n.T("MALE VS FEMALE")</div>
+                        <div id="usersPie" style="min-height:200px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-xs-12">
+                <div class="card">
+                    <div class="body bg-teal">
+                        <div class="font-bold m-b--35 chart-title">@I18n.T("PAYMENT BREAKDOWN")</div>
+
+                        <div id="paymentPie" style="min-height:200px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("table").dataTable();
+        var males = @Model["maleCount"];
+        var females = @Model["femaleCount"];
+
+        var cash = @Model["totalCash"];
+        var credit = @Model["totalCredit"];
+
+        var pieData1 = getUsersPie(males,females);
+        ChartHelper.pie('usersPie', '', pieData1);
+
+        var pieData2 = getPaymentBreakdownPie(cash,credit);
+        ChartHelper.pie('paymentPie', '', pieData2);
+      
+        $("#updateReport").click(function () {
+            var from = $("#fromDate").val();
+            var to = $("#toDate").val();
+            window.location = "/reports/MonthlyCheckOuts?from=" + from + "&to=" + to;
+        });
+
+
+        function getUsersPie(males, females) {
+            var seriesData = { name: "@I18n.T("Gender")", data: [] };
+
+            seriesData.data.push({
+                name: "Male",
+                y: males,
+                color: '#0029ff'
+            });
+
+            seriesData.data.push({
+                name: "Female",
+                y: females,
+                color: '#ff007f'
+            });
+
+            return [seriesData];
+        }
+        function getPaymentBreakdownPie(cash, credit, debit) {
+
+            var seriesData = { name: "", data: [] };
+
+            seriesData.data.push({
+                name: "@I18n.T("Cash")",
+                y: cash
+            });
+
+            seriesData.data.push({
+                name: "@I18n.T("Credit")",
+                y: credit
+            });
+
+            return [seriesData];
+        }
+    });
+
+</script>

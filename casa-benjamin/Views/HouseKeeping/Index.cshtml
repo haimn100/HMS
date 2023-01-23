@@ -1,0 +1,280 @@
+﻿<style>
+    .dirtyAlert {
+        background-color: red;
+    }
+
+        .dirtyAlert a {
+            color: #fff !important;
+        }
+</style>
+<div class="center-content" ng-controller="HouseKeepingController">
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="header clearfix">
+                    <h4 class="pull-left">
+                        @I18n.T("HouseKeeping")<br />
+                        <small>
+                            <a href="/housekeeping/report">Report</a>
+                        </small>
+                        |
+                        <small>
+                            <a href="/housekeeping/manage">Manage</a>
+                        </small>
+                    </h4>
+                </div>
+
+                <div class="body">
+                    <div class="filter-item pull-left-rmargin">
+                        <input type="checkbox" id="clean" ng-model="filter.clean" class="filled-in" />
+                        <label for="clean">Clean</label>
+                    </div>
+                    <div class="filter-item pull-left-rmargin">
+                        <input type="checkbox" id="dirty" ng-model="filter.dirty" class="filled-in" />
+                        <label for="dirty">Dirty</label>
+                    </div>
+                    <div class="filter-item pull-left-rmargin">
+                        <input type="checkbox" id="waitingForCleaning" ng-model="filter.waitingForCleaning" class="filled-in" />
+                        <label for="waitingForCleaning">In Process</label>
+                    </div>
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Status</th>
+                                <th>HouseKeeper</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="room in rooms">
+                                <td ng-class="{dirtyAlert: room.dirtyAlert}">
+                                    <a href="/housekeeping/report?roomid={{room.room_number}}">{{room.room_number}}</a>
+                                </td>
+                                <td>
+                                    <a style="color:orange;" ng-click="unAssignHouseKeeper(room)" ng-if="room.is_clean_required">In Process</a>
+                                    <a style="color:red;" ng-click="assignHouseKeeper(room)" ng-if="room.is_cleaning_inspection_required || room.dirtyAlert">Dirty</a>
+                                    <a style="color:green;" ng-click="assignHouseKeeper(room)" ng-if="!room.is_clean_required && !room.is_cleaning_inspection_required && !room.dirtyAlert">Clean</a>
+                                </td>
+                                <td>
+                                    {{room.assigned_house_keeper_name}}
+                                </td>
+                                <td>
+                                    <span ng-if="room.is_clean_required">HouseKeeper Assigned at {{room.assigned_house_keeper_date | date}}</span>
+                                    <span ng-if="room.is_cleaning_inspection_required">Last Checkout at {{room.is_cleaning_inspection_date | date}}</span>
+                                    <br/>
+                                    <span ng-if="room.last_cleaned != null">Last Cleaned at {{room.last_cleaned | date}}</span>
+                                </td>
+                            </tr>
+                            <tr ng-if="rooms.length == 0">
+                                <td colspan="4" align="center">
+                                    Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    myApp.controller('HouseKeepingController', function ($scope, $timeout, $http, $mdDialog) {
+        var rooms = JSON.parse(JSON.stringify(Casa.settings.rooms));
+        var users = JSON.parse(JSON.stringify(Casa.settings.users));
+
+        // init users in beds and reservation info
+        _.each(rooms, function (room) {
+
+            var partnersIds = [];
+            _.each(room.beds, function (bed) {
+                var user = _.find(users, function (user) { return user.bed_id === bed.bed_id; });
+                if (!_.isUndefined(user)) {
+                    user.bed_type_id = bed.bed_type_id;
+                    bed.user = user;
+                }
+
+            });
+        });
+
+        for (var i = 0; i < rooms.length; i++) {
+
+            rooms[i].dirtyAlert = false;
+            var isOccupied = _.some(rooms[i].beds, function (a) { return !_.isUndefined(a.user); });
+            if (rooms[i].room.last_cleaned != null && isOccupied) {
+                var d = moment(rooms[i].room.last_cleaned);
+                var customPeriod = moment().subtract(3, 'days');
+                if (d.isBefore(customPeriod)) {
+                    try {
+                        var firstCheckinUser = _.chain(rooms[i].beds)
+                            .map(function (a, b) { return a.user; })
+                            .sortBy(function (a) { return _.isUndefined(a) ? Number.MAX_SAFE_INTEGER : moment(a.cidate).unix(); })
+                            .first()
+                            .value();
+                        var firstCheckin = moment(firstCheckinUser.cidate);
+                        if (firstCheckin.isBefore(customPeriod)) {
+                            rooms[i].room.dirtyAlert = true;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }                
+                }
+            }
+        }
+
+
+        rooms = _.map(rooms, function (r) { return r.room; });
+        var allRooms = rooms.slice();
+        $scope.rooms = rooms;
+
+        $scope.filter = {
+            clean: false,
+            dirty: false,
+            waitingForCleaning: false
+        }
+
+        $scope.assignHouseKeeper = function (selectedRoom) {
+
+            $mdDialog.show({
+                locals: { room: selectedRoom },
+                templateUrl: 'assign-cleaning-dialog.htm',
+                controller: function ($scope, room) {
+                    var _staff = null;
+                    $scope.room = room;
+                    $http.get("/housekeeping/gethousekeepers").then(
+                        function (res) {
+                            $scope.staffList = res.data;
+                        }, function () {
+                            alert("Having trouble getting housekeepers list");
+                        });
+
+                    $scope.hide = function () {
+                        $mdDialog.hide();
+                    };
+
+                    $scope.cancel = function () {
+                        $mdDialog.cancel();
+                    };
+
+                    $scope.onStaffSelected = function (selectedStaff) {
+                        _staff = selectedStaff;
+                    }
+
+                    $scope.answer = function () {
+                        if (_staff == null) {
+                            alert("choose staff");
+                            return;
+                        }
+                        $mdDialog.hide(_staff);
+                    };
+
+                },
+                clickOutsideToClose: false,
+                fullscreen: true
+            }).then(function (staff) {
+                $http({
+                    url: "/housekeeping/requireclean",
+                    method: "GET",
+                    params: {
+                        house_keeper_id: staff.id,
+                        house_keeper_name: staff.name,
+                        room_number: selectedRoom.room_number
+                    }
+                });
+                selectedRoom.is_clean_required = !selectedRoom.is_clean_required;
+                selectedRoom.assigned_house_keeper_name = staff.name;
+                selectedRoom.assigned_house_keeper_id = staff.id;
+                selectedRoom.assigned_house_keeper_date = moment.now();
+            });
+        };
+
+        $scope.unAssignHouseKeeper = function (selectedRoom) {
+
+            $mdDialog.show({
+                locals: { room: selectedRoom },
+                templateUrl: 'unassign-cleaning-dialog.htm',
+                controller: function ($scope, room) {
+                    $scope.room = room;
+
+                    $scope.hide = function () {
+                        $mdDialog.hide();
+                    };
+
+                    $scope.cancel = function () {
+                        $mdDialog.cancel();
+                    };
+
+                    $scope.answer = function () {
+                        $mdDialog.hide({ beds: $scope.numOfBeds, comment: $scope.comment });
+                    };
+
+                },
+                clickOutsideToClose: false,
+                fullscreen: true
+            }).then(function (res) {
+                $http({
+                    url: "/housekeeping/finishclean",
+                    method: "GET",
+                    params: {
+                        num_of_beds: res.beds,
+                        room_number: selectedRoom.room_number,
+                        comment: res.comment
+                    }
+                });
+                selectedRoom.is_clean_required = !selectedRoom.is_clean_required;
+            });
+        };
+
+        $scope.$watch('filter.clean', function (newValue, oldValue) {
+            if (newValue !== oldValue) {
+                $scope.filter();
+            }
+        }, true);
+
+        $scope.$watch('filter.dirty', function (newValue, oldValue) {
+            if (newValue !== oldValue) {
+                $scope.filter();
+            }
+        }, true);
+
+        $scope.$watch('filter.waitingForCleaning', function (newValue, oldValue) {
+            if (newValue !== oldValue) {
+                $scope.filter();
+            }
+        }, true);
+
+        $scope.filter = function () {
+            rows = [];
+            var rooms = $scope.rooms;
+
+            if ($scope.filter.clean || $scope.filter.dirty || $scope.filter.waitingForCleaning) {
+                for (var i = 0; i < allRooms.length; i++) {
+
+                    if ($scope.filter.clean && (!allRooms[i].is_clean_required && !allRooms[i].is_cleaning_inspection_required)) {
+                        rows.push(allRooms[i]);
+                        continue;
+                    }
+
+                    if ($scope.filter.dirty && (allRooms[i].is_cleaning_inspection_required || allRooms[i].dirtyAlert)) {
+                        rows.push(allRooms[i]);
+                        continue;
+                    }
+
+                    if ($scope.filter.waitingForCleaning && (allRooms[i].is_clean_required)) {
+                        rows.push(allRooms[i]);
+                        continue;
+                    }
+                }
+                $scope.rooms = rows;
+            } else {
+                $scope.rooms = allRooms;
+            }
+
+
+        }
+    });
+</script>
+

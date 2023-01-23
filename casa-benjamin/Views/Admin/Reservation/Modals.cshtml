@@ -1,0 +1,392 @@
+﻿<style>
+    .modal {
+        overflow-y: auto !important;
+    }
+</style>
+<div class="modal fade" id="resAlertModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="defaultModalLabel"></h4>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalEdit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Edit Reservation")</h4>
+            </div>
+            <div class="modal-body">
+                <form action="/reservation/edit?returnurl=/reservation/calendar" method="post" onsubmit="return checkres($('#modalEdit'));">
+                    <input type="hidden" name="id" value="" />
+                    <input type="hidden" name="res_id" value="" />
+                    <div class="row clearfix">
+                        <div class="col-lg-12">
+                            <table class="info-table">
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Start Date")</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="date-picker form-control" data-minDate="0" name="res_date" autocomplete="off" placeholder="mm/dd/yyyy" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("End Date")</label>
+                                            <div class="form-line">
+                                                <input type="text" autocomplete="off" required class="date-picker form-control" data-minDate="0" name="res_date_end" placeholder="mm/dd/yyyy" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Room")</label>
+                                            <div class="form-line">
+                                                <input type="number" required class="form-control" min="1" name="room_id" placeholder="@I18n.T("Enter Room Number")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Number Of People")</label>
+                                            <div class="form-line">
+                                                <input type="number" required class="form-control" min="1" name="number_of_people" placeholder="@I18n.T("Number Of People In The Room")" />
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("For")</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="form-control" name="res_name" value="" placeholder="@I18n.T("Client Name")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="form-control" name="res_email" value="" placeholder="@I18n.T("Email (used also for confirmation)")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Reserver")</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="form-control" name="employee_name" value="" placeholder="@I18n.T("Name Of Reserver")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="form-group">
+                                            <label>@I18n.T("Comment")</label>
+                                            <div class="form-line">
+                                                <input type="text" class="form-control" name="comment" value="" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Gender")</label>
+                                            <div class="form-line">
+                                                <select name="sex" class="form-control" placeholder="">
+                                                    <option value="true">@I18n.T("Male")</option>
+                                                    <option value="false">@I18n.T("Female")</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="checkbox" value="true" id="allowmixdormModalAdd" name="allow_mix_dorm" />
+                                                <label for="allowmixdormModalAdd">@I18n.T("Allow Mix Dorm")</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE").ToUpper()</button>
+                            <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE").ToUpper()</button>
+                            <button type="button" class="btn btn-link waves-effect" id="sendconfirmation" onclick="sendConfirmation($('#modalEdit'));">@I18n.T("Send Confirmation Email").ToUpper()</button>
+                            <button type="button" class="btn-new-reservation btn btn-link waves-effect" data-dismiss="modal">NEW RESERVATION</button>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalAdd" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="defaultModalLabel">@I18n.T("Add Reservation") <small><span class="free-beds"></span> more guests available</small></h4>
+            </div>
+            <div class="modal-body">
+                <form action="/reservation/add?returnurl=/reservation/calendar" method="post" onsubmit="return checkres($('#modalAdd'));">
+                    <div class="row clearfix">
+                        <div class="col-lg-12">
+                            <table class="info-table">
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <div>
+                                                <input type="checkbox" value="true" id="from_channel_manager" name="from_channel_manager" />
+                                                <label for="from_channel_manager">@I18n.T("From Channel Manager")</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Start Date")</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="date-picker form-control" data-minDate="0" name="res_date" autocomplete="off" placeholder="mm/dd/yyyy" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("End Date")</label>
+                                            <div class="form-line">
+                                                <input type="text" autocomplete="off" required class="date-picker form-control" data-minDate="0" name="res_date_end" placeholder="mm/dd/yyyy" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Room")</label>
+                                            <div class="form-line">
+                                                <select name="room_id" id="room_id" style="width:100%;"></select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Number Of People")</label>
+                                            <div class="form-line">
+                                                <input type="number" required class="form-control" min="1" name="number_of_people" placeholder="@I18n.T("Number Of People In The Room")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>For</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="form-control" name="res_name" value="" placeholder="@I18n.T("Client Name")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="form-control" name="res_email" value="" placeholder="@I18n.T("Email (used also for confirmation)")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>Reserver</label>
+                                            <div class="form-line">
+                                                <input type="text" required class="form-control" name="employee_name" value="" placeholder="@I18n.T("Name Of Reserver")" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <div class="form-group">
+                                            <label>@I18n.T("Comment")</label>
+                                            <div class="form-line">
+                                                <input type="text" class="form-control" name="comment" value="" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <label>@I18n.T("Gender")</label>
+                                            <div class="form-line">
+                                                <select name="sex" class="form-control" placeholder="">
+                                                    <option value="true">@I18n.T("Male")</option>
+                                                    <option value="false">@I18n.T("Female")</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="checkbox" value="true" id="allowmixdormModalAdd2" name="allow_mix_dorm" />
+                                                <label for="allowmixdormModalAdd2">@I18n.T("Allow Mix Dorm")</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-link waves-effect">@I18n.T("SAVE").ToUpper()</button>
+                            <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">@I18n.T("CLOSE").ToUpper()</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    var rooms = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(CacheManager.Instance.Rooms))
+
+        $(document).ready(function () {
+
+            $.each($("select[name='room_id']"), function (index,item) {
+                $item = $(item);
+                for (var i = 0; i < rooms.length; i++) {
+                    var roomId = rooms[i].room.id;
+                    var roomType = "PRIVATE";
+                    if (rooms[i].room.room_type_id == 2) {
+                        roomType = "DORM";
+                    }
+                    else if(rooms[i].room.room_type_id == 3){
+                        roomType = "PrivateWithTV";
+                    }
+                    $item.append("<option value='" + roomId + "'>" + roomId + " (" + roomType  + ")</option>");
+                }
+            });
+    });
+
+    function checkres($modal) {
+        var startDate = $modal.find("input[name='res_date']").val();
+        var endDate = $modal.find("input[name='res_date_end']").val();
+
+        var d1 = MyHostel.i18n.getMomentJsDate(startDate);
+        var d2 = MyHostel.i18n.getMomentJsDate(endDate);;
+
+        if (moment(d1).isAfter(d2) || moment(d1).isSame(d2)) {
+            alert("@Html.Raw(I18n.T("Dates are not valid"))");
+            return false;
+        }
+
+        return true;
+    }
+
+     function sendConfirmation($modal) {
+         if (confirm("Are you sure?")) {
+             var id = $modal.find("input[name='res_id']").val();
+             $.get("/reservation/sendconfirmation?resID=" + id).done(function () {
+                 alert("Email Sent");
+             }).fail(function () { alert("There was a problem sending the mail, please contact your administrator");})
+         }
+        return false;
+    }
+
+    function editModal(id, name, start, end, people, roomType, sex, allowMix, roomId, staff,comment,res_id,email,freebeds) {
+
+        if(start.indexOf('Date') !== -1) start = moment(start).format("DD/MM/YYYY");
+        if(end.indexOf('Date') !== -1) end = moment(end).format("DD/MM/YYYY");
+
+        if (allowMix) {
+            $("#modalEdit input[name='allow_mix_dorm']").attr("checked", "checked");
+        } else {
+            $("#modalEdit input[name='allow_mix_dorm']").removeAttr("checked");
+        }
+
+        $("#modalEdit").modal();
+
+        $("#modalEdit input[name='id']").val(id);
+        $("#modalEdit input[name='res_id']").val(res_id);
+        $("#modalEdit input[name='res_date']").val(start);
+        $("#modalEdit input[name='res_date_end']").val(end);
+        $("#modalEdit input[name='res_name']").val(name);
+        $("#modalEdit input[name='room_id']").val(roomId);
+        $("#modalEdit input[name='number_of_people']").val(people);
+        $("#modalEdit select[name='room_type']").val(roomType);
+        $("#modalEdit select[name='sex']").val(sex.toString());      
+        $("#modalEdit input[name='room_id']").val(roomId);
+        $("#modalEdit input[name='employee_name']").val(staff);
+        $("#modalEdit input[name='comment']").val(comment);
+        $("#modalEdit input[name='res_email']").val(email);
+        //let mailTo = $("#modalEdit .mailto").attr('href')
+        //    .replace("{mail}", email)
+        //    .replace("{body}", encodeURIComponent(`Reservation Number: ${res_id}\nGuest Name: ${name }\nCheck-In: ${start}\nCheck-Out: ${end}\nRoom Number: ${roomId}\nNumber of Guests:${people}`)
+        //    );
+
+        //$("#modalEdit .mailto").attr('href', mailTo);
+        if (!freebeds || parseInt(freebeds) === 0) {
+            $("#modalEdit").find(".btn-new-reservation").hide();
+        } else {
+            $("#modalEdit").find(".btn-new-reservation").show();
+        }
+        //anonymos method to keep scope of host parameters like room
+        (() => {
+            $("#modalEdit").find(".btn-new-reservation").click((el) => {
+                addResModal(roomId, end, freebeds);
+            });
+        })();
+        
+    }
+
+
+    function addResModal(room, date, freeBeds) {         
+        let dateFormat = "DD/MM/YYYY";
+
+        let $modal = $("#modalAdd");
+        $modal.find("form").trigger('reset');
+
+        let $startDate = $modal.find("input[name='res_date']");
+        let $endDate = $modal.find("input[name='res_date_end']");
+
+        $startDate.val(date);
+        $endDate.val(moment(date,dateFormat).add(1, 'days').format(dateFormat));
+        $startDate.change(function (event) {
+            let moment_sDate = moment(event.target.value,dateFormat);
+            let moment_eDate = moment($endDate.val(), dateFormat);
+
+            if (moment_sDate.isAfter(moment_eDate)) {
+                $endDate.val(moment_sDate.add(1, 'days').format(dateFormat));
+            }
+        });
+
+        $modal.find("input[name='room_id']").val(room);
+        $modal.find(".free-beds").text(freeBeds);
+        $modal.find("select[name='room_id']").val(room);
+        $modal.modal(); 
+
+        
+    }
+
+    </script>

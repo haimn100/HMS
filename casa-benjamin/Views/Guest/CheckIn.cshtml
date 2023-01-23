@@ -1,0 +1,600 @@
+﻿
+@{
+    ViewBag.Title = "CheckIn";
+    List<Reservation> reservations = ReservationManager.Instance.GetNonCheckoutReservationsByRoom(((Room)ViewBag.Room).id,DateTime.Now);
+}
+
+<style>
+    .roomAlert {
+        border: 2px solid orange;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="no-print">
+    <a href="#" onclick="window.history.back();" class="pull-left-rmargin"> <i class="material-icons">keyboard_backspace</i></a>
+
+    <div class="row clearfix">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="header">
+                    <div class="roomAlert clearfix" style="display:none;">
+                        <i class="material-icons pull-left" style="font-size:3em;">warning</i>
+                        <div style="padding-left:50px">
+                            <p>The room has this following reservations in the selected dates:</p>
+                            <ul class="resrevationsList">
+
+                            </ul>
+                        </div>
+                    </div>
+                    <h2>
+                        @I18n.T("Check In Guest To Bed Number") @ViewBag.BedNumber                      
+                    </h2>                 
+                </div>
+                <div class="body">
+                    <form action="/guest/checkinform" method="post" onsubmit="return submitCheckin();">
+                        <div class="row clearfix">
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                <input type="hidden" name="bed_id" value="@ViewBag.BedId">
+
+                                <table class="info-table">
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label for="res">@I18n.T("Reservation")</label>
+                                                <div class="form-line" > 
+                                                    <select id="roomReservations" style='width:100%;' name='res_id'>                                                      
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>                                       
+                                        <td>
+                                            <div class="form-group">
+                                                <label for="passport">@I18n.T("Passport")</label>
+                                                <div class="form-line">
+                                                    <input value="" type="text" id="passport" name="passport" class="form-control" required="" placeholder="ex. 21017712">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div class="form-group" style="width:47%;float:left;margin-right:10px;">
+                                                <label>@I18n.T("First Name")</label>
+                                                <div class="form-line">
+                                                    <input value="" type="text" id="guestname" name="name" class="form-control " required="" placeholder="ex. John Doe">
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="width:48%;float:left;">
+                                                <label>@I18n.T("Last Name")</label>
+                                                <div class="form-line">
+                                                    <input value="" type="text" name="last_name" class="form-control " required="" placeholder="ex. John Doe">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label for="nationality">@I18n.T("Nationality")</label>
+                                                <div class="form-line">
+                                                    <select class="select2" name="nationality" id="nationality" required data-countries>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div class="form-group" style="width:48%;float:left;margin-right:10px;">
+                                                <label for="cidate">@I18n.T("Check In")</label>
+                                                <div class="form-line">
+                                                    <input style="height:28px;" disabled="disabled" type="text" id="cidate" name="cidate" class="datetimepicker form-control" required value="@DateTime.Now.ToShortUIDateTimeString()" placeholder="@I18n.T("Enter Date")">
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="width:48%;float:left;">
+                                                <label for="cidate">@I18n.T("Check Out")</label>
+                                                <div class="form-line">
+                                                    <input style="height:28px;" autocomplete="off" type="text" id="intended_codate" name="intended_codate" data-minDate="@DateTime.Now.AddDays(1).ToShortUIDateString()" class="date-picker form-control" value="@DateTime.Now.AddDays(1).ToShortUIDateString()" required placeholder="@I18n.T("Enter Date")">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label>@I18n.T("Gender")</label>
+                                                <div class="form-line" style="margin-top:3px;">
+                                                    <input name="sex" required="" id="male" type="radio" class="with-gap radio-col-deep-orange">
+                                                    <label for="male">@I18n.T("Male")</label>
+                                                    <input name="sex" required="" id="female" type="radio" class="with-gap radio-col-deep-orange">
+                                                    <label for="female">@I18n.T("Female")</label>
+                                                </div>
+                                             </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group">
+                                                <label for="bed_price">@I18n.T("Price")</label>
+                                                <div class="form-line">
+                                                    <input value="" id="bed_price" type="number" min="0" name="bed_price" class="form-control is-number" required="" placeholder="@I18n.T("Enter Price")">
+                                                </div>
+                                            </div>                         
+                                        </td>
+                                    </tr>                                    
+                                    @if (CacheManager.Instance.AppSettings.RequireImmigrationInfo)
+                                    {
+                                        <tr>                                           
+                                            <td>
+                                                <div class="form-group">
+                                                    <label for="arrival">@I18n.T("Arrival")</label>
+                                                    <div class="form-line">
+                                                        <select class="select2" name="arrival" id="arrival" required data-countries-cities data-default-code="11001"></select>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="form-group">
+                                                    <label>@I18n.T("Destination")</label>
+                                                    <div class="form-line">
+                                                        <select class="select2" name="destination" id="destination" required data-countries-cities data-default-code="5001"></select>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                       <tr>
+                                           
+                                           <td>
+                                               <div class="form-group">
+                                                   <label for="birth_date">@I18n.T("Birth Date")</label>
+                                                   <div class="form-line">
+                                                       <input type="text" id="birth_date" name="birth_date" class="form-control date-picker datemask" data-change-year="true" data-change-month="true" required placeholder="@I18n.T("Enter Birth Date")">
+                                                   </div>
+                                               </div>
+                                           </td>
+                                           <td>
+                                               <div class="form-group">
+                                                   <div class="form-line">
+                                                       <label>@I18n.T("Profession")</label>
+                                                       <input type="text" name="profession" class="form-control" placeholder="(@I18n.T("Optional"))">
+                                                   </div>
+                                               </div>
+                                           </td>
+                                       </tr>
+                                       <tr>
+                                           <td>
+                                               <div class="form-group">
+                                                   <div class="form-line">
+                                                       <label>@I18n.T("Document Type")</label>
+                                                        <div class="form-line">
+                                                           <select class="select2" name="document_type" style="width:100%;padding:3px;">
+                                                               <option value="3" selected="selected">@I18n.T("Passport")</option>
+                                                           </select>
+                                                        </div>
+                                                   </div>
+                                               </div>                                              
+                                           </td>
+                                           <td></td>
+                                       </tr>
+                                    }
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label for="email">@I18n.T("Email")</label>
+                                                <div class="form-line">
+                                                    <input value="" type="text" id="email" name="email" class="form-control " placeholder="(@I18n.T("Optional"))">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group">
+                                                <label for="phone">@I18n.T("Phone")</label>
+                                                <div class="form-line">
+                                                    <input value="" id="phone" type="text" name="phone" class="form-control " placeholder="(@I18n.T("Optional"))">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(CacheManager.Instance.AppSettings.barcodePrefix))
+                                    {
+                                        <tr>
+                                            <td colspan="2">
+                                                <div class="form-group">
+                                                    <label for="barcode">@I18n.T("Barcode")</label>
+                                                    <div class="form-line">
+                                                        <input value="" type="text" id="barcode" name="barcode" class="form-control" placeholder="@I18n.T("Enter Code")">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </table>
+                                <div class="form-group">
+                                     <div class="form-line">
+                                         <select class="form-control select2" placeholder="@I18n.T("Employee")" id="employee" required="" tabindex="-1" aria-hidden="true">
+                                             <option></option>
+                                             @foreach (var item in UserManager.Instance.GetStaff(true))
+                                             {
+                                                 <option value="@item.id">@item.name</option>
+                                             }
+                                         </select>
+                                         </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                <div class="videoContainer">
+                                    <video autoplay id="v"></video>
+                                    <img style="display:none;width:96%;height:100%;" src="" id="photo" alt="photo">
+                                </div>
+                                <button class="btn pull-left" style="margin-right:15px;" type="button" id="take">@I18n.T("Take a photo")</button>
+                                <button class="btn pull-left" type="button" id="resetVideo">@I18n.T("Reset")</button><br />
+                                <canvas id="canvas" style="display:none;"></canvas>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                    <button type="submit" class="btn bg-green waves-effect">
+                                        <i class="material-icons">save</i>
+                                        <span>@I18n.T("SAVE")</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <button onclick="regulations(true);" class="btn bg-orange waves-effect">Print English Regulations</button>
+                            <button onclick="regulations();" class="btn bg-orange waves-effect">Print Spanish Regulations</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    function submitCheckin() {
+        try {
+            var payload = {};
+            $("form input[type='text'],form input[type='number'],form input[type='hidden']").each(function (index,el) {
+                payload[$(el).attr("name")] = $(el).val();
+            });
+            $("form select").each(function (index, el) {
+                payload[$(el).attr("name")] = $(el).val();
+            });
+            var sex = $("input[name='sex']:checked");
+            payload["sex"] = $(sex).attr("id") === "male" ? true : false; 
+            payload["employee"] = $("#employee option:selected").text();
+
+            if (payload["employee"].length === 0) {
+                alertify.alert("@I18n.T("Choose Employee")");
+                return false;
+            }
+
+            var image = document.getElementById("canvas").toDataURL("image/png");
+            payload["image"] = image.replace('data:image/png;base64,', '');
+
+            if (isCanvasBlank()) {
+                if (!confirm("@I18n.T("You did not take a picture. Continue with out one?")")) {
+                    return false;
+                } else {
+                    payload["image"] = "";
+                }
+            }
+
+            submitAjax(payload);
+            
+            return false;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+
+    function submitAjax(payload) {
+        $.ajax({
+                type: 'POST',
+                url: "/guest/CheckInForm",
+                async: false,
+                data: JSON.stringify(payload),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json'
+            }).always(function (data) {
+                if (data.responseText !== "ok") {
+                    alert(data.responseText);                   
+                } else {
+                    window.location = "/?alert=@I18n.T("Successfuly added")" + " " + payload["name"] + "&alerttype=success";
+                }
+            });
+    }
+
+
+    window.onload = function () {
+
+        var roomRes = @Html.Raw(Json.Encode(reservations));
+        var $resEl = $("#roomReservations");
+        if (roomRes.length > 0) {
+            var selectEl = "<option></option>";
+            for (var i = 0; i < roomRes.length; i++) {
+                selectEl += "<option value='" + roomRes[i].res_id + "'>" + roomRes[i].res_name + " (" + roomRes[i].nights + " Nights)</option>";
+            }
+            $resEl.html(selectEl);
+        } else {
+            $resEl.append("<option value=''>No reservations found for this room</option>");
+        }
+
+        $resEl.change(function () {
+            var val = $(this).val();
+            if (val.length > 0) {
+                var selectedRes = _.find(roomRes, function (item) {
+                    return item.res_id == val;
+                });
+                if (!_.isUndefined(selectedRes)) {
+                    $("#guestname").val(selectedRes.res_name);
+                    $("#intended_codate").val(getNormalDateFormat(selectedRes.res_date_end))
+                    $("#cidate").prop("disabled", true);
+                    $("#intended_codate").prop("disabled", true);
+                }                
+            } else {
+                $("#cidate").prop("disabled", false);
+                $("#intended_codate").prop("disabled", false);
+
+            }
+        });
+
+        $("input[name='passport']").on('input', function () {
+            try {
+                var passport = $(this).val();
+                if (passport.length > 7) {
+                    $.getJSON("/guest/getuserbypassport?passport=" + passport, function (data) {
+
+                        $("input[name='name']").val(data.name);
+                        $("input[name='last_name']").val(data.last_name);
+                        $("input[name='email']").val(data.email);
+
+                        if (data.sex) {
+                            $("#male").attr("checked", "checked");
+                        } else {
+                            $("#female").attr("checked", "checked");
+                        }
+
+                        let nationality = $("#nationality option:contains('" + data.nationality.toUpperCase() + "')").val();
+                        $("#nationality").val(nationality).change();
+
+                        if (data.birth_date != null) {
+                            $("input[name='birth_date']").val(MyHostel.i18n.getUIDate(data.birth_date));
+                        }
+
+                        loadExistingUserImage(data.pic);
+
+                    });
+                }
+            } catch {}
+        });
+
+        $("#resetVideo").click(function () {
+            var video = document.getElementById('v');
+            var canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            $("#photo").hide();
+            $("video").show();
+        });
+
+        $("#intended_codate").change(function () {
+            var from = $("#cidate").val();
+            var to = $("#intended_codate").val();
+            var bed = @ViewBag.BedId;
+            //if (to.length > 0) {
+            //    $.getJSON("https://" + window.location.host + "/guest/GetReservationsInDates?from=" + from + "&to=" + to + "&bedid=" + bed,
+            //        function (reservations) {
+                        
+
+            //            if (reservations.length == 0) {
+            //                $(".roomAlert").hide();
+            //            } else {
+            //                var output = "";
+            //                var totalPeople = 0;
+            //                for (var i = 0; i < reservations.length; i++) {
+            //                    totalPeople += reservations[i].number_of_people;
+            //                    output += "<li>";
+            //                    output +=
+            //                        moment(reservations[i].res_date).format("DD/MM/YYYY") + " - " + moment(reservations[i].res_date_end).format("DD/MM/YYYY") + " for " + reservations[i].res_name + " | " + reservations[i].number_of_people + " people";
+            //                    output +="</li>"
+            //                }   
+            //                $(".roomAlert .resrevationsList").html(output);
+            //                $(".roomAlert").show();
+            //            }
+            //    })
+            //}
+
+        });
+        $("#intended_codate").change();
+
+        function userMedia() {
+            return navigator.getUserMedia = navigator.getUserMedia ||
+                navigator.webkitGetUserMedia ||
+                navigator.mozGetUserMedia ||
+                navigator.msGetUserMedia || null;
+
+        }
+
+        if (userMedia()) {
+            var videoPlaying = false;
+            var constraints = {
+                video: true,
+                audio: false
+            };
+            var video = document.getElementById('v');
+
+            var media = navigator.getUserMedia(constraints, function (stream) {
+
+                try {
+                    video.srcObject = stream;
+                } catch (error) {
+                    // URL Object is different in WebKit
+                    var url = window.URL || window.webkitURL;
+
+                    // create the url and set the source of the video element
+                    video.src = url ? url.createObjectURL(stream) : stream;
+                }
+
+
+
+                // Start the video
+                //video.play();
+                videoPlaying = true;
+            }, function (error) {
+                console.error(error);
+            });
+
+
+            // Listen for user click on the "take a photo" button
+            document.getElementById('take').addEventListener('click', function () {
+                if (videoPlaying) {
+                    var canvas = document.getElementById('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    var data = canvas.toDataURL('image/png');
+                    document.getElementById('photo').setAttribute('src', data);
+
+                    $("video").hide();
+                    $("#photo").show();
+                }
+            }, false);
+        } else {
+            console.log("KO");
+        }   
+    }
+
+  
+
+    function loadExistingUserImage(imageUrl) {
+        var img = new Image();
+        img.src = "/guestimages/" + imageUrl;
+        img.onload = function () {
+            var video = document.getElementById('v');
+            var canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+
+            document.getElementById('photo').setAttribute('src', canvas.toDataURL());
+
+            $("video").hide();
+            $("#photo").show();
+        }
+    };
+
+    function isCanvasBlank() {
+        var canvas = document.getElementById('canvas');
+
+        var blank = document.createElement('canvas');
+        blank.width = canvas.width;
+        blank.height = canvas.height;
+        return canvas.toDataURL() == blank.toDataURL();
+    }
+
+    function getNormalDateFormat(shittyDateFormat) {
+        return moment.utc(shittyDateFormat).format("DD/MM/YYYY");
+    }
+
+</script>
+
+
+<script>
+    function regulations(isEnglish) {        
+
+        $(".regName").text($("#guestname").val() + " " + $("input[name='last_name']").val());
+        $(".regPassport").text($("#passport").val());
+        if (isEnglish) {
+            $(".print").html($("#regEnglish").html());
+        } else {
+            $(".print").html($("#regSpanish").html());
+        }
+
+        window.print();
+        return false;
+    }
+</script>
+
+<div class="print" style="font-size:1.2em">
+
+</div>
+<div id="regEnglish" style="display:none;">
+    <h4>Hotel interior regulations:</h4>
+    All guests staying at the hotel Benjamin, during their stay, are subject to this regulation.<br />
+    - The hotel is not responsible for the values, documents, jewelry, money, etc., forgotten in the shared rooms or common areas, but these are not protected with prior notice at the reception.
+    <br />- The time of departure will be at 12:00 a.m. maximum. (You can stay in the common areas and after checking out).
+    <br />- The guest is responsible for their actions, in the case of damage to furniture, decorations and / or structures in the hotel, is obliged to pay the cost of repairing these, be paid in cash, be charged to the account of the Customer or Charge to the card in guarantee that the guests leave to check in.
+    <br />- All the person occupying a room must have been previously selected at the reception. - The number of people per room or bed must be respected.
+    <br />- The hotel reserves the right of admission for visits received in your room. - Pets are not allowed inside the hotel.
+    <br />- No minors are allowed inside the hotel. - The towels are not included in the accommodation, if you require one, they cost $ 200.00 pesos per piece.
+    <br />- Smoking is prohibited inside the hotel rooms. - The access of alcohol, drugs and any type of weapon to the interior of the hotel is prohibited.
+    <br />- Alcohol purchased outside the hotel can’t be consumed in the common areas of the hotel.
+    <br />- It is necessary that the guest keep his conversations in a moderate tone so as not to disturb the rest of the other guests after 00:30.
+    <br />- The guest declares to know and to agree that the hotel has ambient music in the common areas starting at 12:00 and ends at 00:00.
+    <br />- In the case of a trip that is not more than 48 hours, without taking a look, it is necessary to also notify the reception for the corresponding procedures.
+    <br />- The hotel gives notice to the authorities in case of absence of the service for more than 48 hours without notifying and follow the steps to make the collection of the debt (if any) to the card in guarantee that left at check in.
+    <br />- The lost of the key of the room has a cost of $ 100.00 pesos that must be covered during the stay or departure.
+    <br />- In case of not complying with this regulation, the hotel may be to desist from offering the services already been fulfilled, without any obligation towards the guest.
+    <p></p>
+    <p>Name: <span class="regName"></span></p>
+    <p>Passport: <span class="regPassport"></span> </p>
+
+    -------------------------------------------------- ----- <br />
+    SIGNATURE OF GUEST
+</div>
+<div id="regSpanish" style="display:none;">
+    <h4>Reglamento interior del Hostel:</h4>
+
+    Todos los huéspedes que se hospeden en We playa, durante su estadía, están sujetos a
+    este reglamento.<br />
+    - El hotel no se hace responsable por valores, documentos, joyas, dinero, etc., olvidados
+    en las habitaciones compartidas o áreas comunes, si estos no son resguardados con
+    previo aviso en la recepción.<br />
+    - La hora de check out será a las 12:00 horas como máximo, después de dicho horario se
+    cobrará el importa de una noche más. (se puede permanecer en las áreas comunes a un
+    después de hacer check out).<br />
+    - El huésped se responsabiliza de sus actos, en caso de daños causados a muebles,
+    decoraciones y/o estructuras en el hotel, se obliga a pagar el costo o reparación de estos,
+    podrá pagarse en efectivo, ser cargados a la cuenta del huésped o cargados a la tarjeta
+    en garantía que dejo al check in.<br />
+    - Toda persona que ocupe una habitación deberá registrarse previamente en la recepción.<br />
+    - Se debe respetar el número de personas por habitación o cama.<br />
+    - El hotel se reserva el derecho de admisión para las visitas recibidas en su habitación.<br />
+    - No se permiten animales dentro del hotel.<br />
+    - No se permiten menores de edad dentro del hotel.<br />
+    - Las toallas no están incluidas en el hospedaje, si requiere una, tienen costo de $200.00
+    pesos por pieza.<br />
+    - Está prohibido fumar dentro de las habitaciones del hotel.<br />
+    - Queda prohibido el acceso de alcohol, droga y cualquier tipo de arma al interior del hotel.<br />
+    - El alcohol que se compra fuera del hotel no puede consumirse en las áreas comunes del
+    hotel.<br />
+    - Es obligación del huésped mantener sus conversaciones en tono moderado para no
+    perturbar el descanso de los otros huéspedes después de las 00:30 horas.<br />
+    - El huésped declara saber y estar de acuerdo que el hotel tiene música ambiente en las
+    áreas comunes a partir de las 12:00 horas y termina a las 00:00 horas.<br />
+    - En caso de viaje o ausencia por más de 48 horas, sin hacer check out, es obligación del
+    huésped notificarlo a la recepción para los tramites que correspondan.<br />
+    - El hotel dará aviso a las autoridades en caso de ausencia del huésped por más de 48 horas
+    sin notificarlo y se procederá a hacer el cobro de la deuda (si hubiera) a la tarjeta en
+    garantía que dejo en el check in.<br />
+    - El extravió de la llave de habitación tiene un costo de $100.00 pesos que debe cubrirse
+    durante el hospedaje o al check out.<br />
+    - En caso de querer cancelar la reserva después de hacer el check in y solicitar rembolso,
+    se cobrará una penalidad del 30% del monto total de la reserva.<br/>
+    - En caso de no cumplir este reglamento el hotel puede desistir de ofrecer los servicios ya
+    mencionados, sin obligación alguna hacia el huésped.<br />
+
+    <p></p>
+    <p>Nombre: <span class="regName"></span></p>
+    <p>Passporte: <span class="regPassport"></span> </p>
+
+    -------------------------------------------------------<br />
+    FIRMA DE HUESPED
+</div>

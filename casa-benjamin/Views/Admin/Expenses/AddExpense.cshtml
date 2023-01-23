@@ -1,0 +1,92 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    DateTime _date = ViewBag.Date;
+
+    List<ExpenseLog> LogTable = new GenericRepository().Get<ExpenseLog>(string.Format("select * from expense_log where month(_timestamp) = {0} and year(_timestamp) = {1}", _date.Month, _date.Year)).ToList();
+}
+
+<div class="container-fluid report-screen">
+    <h1 class="reports-title">@I18n.T("MANAGE EXPENSES")</h1>
+    <div class="block-header">
+        <h2>
+            @I18n.T("MONTHLY REPORT OF")
+            <input type="text" class="dateMonthPicker report-main-date" style="width:70px;" value="@_date.ToShortUIMonthlyDateString()" />
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="body">
+                    <table id="expensesTable" class="table dataTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="header">
+                    Log
+                </div>
+                <div class="body">
+                    <table id="logTable" class="table dataTable" data-page-size="20">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Staff</th>
+                                <th>Expense</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in LogTable.OrderByDescending(x=> x._timestamp))
+                            {
+                                <tr>
+                                    <td>@item._timestamp.ToShortUIDateTimeString()</td>
+                                    <td>@item.action_type.ToString()</td>
+                                    <td>@item.staff_name</td>
+                                    <td>@item.expense_name</td>
+                                    <td>@item.expense_val.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let date = "01/" + $(".dateMonthPicker").val();
+
+    $(".dateMonthPicker").change(function () {
+        var d = $(this).val();
+        window.location = "/ledger/manageexpenses?date=" + d;
+    });
+
+    new _globalCreateDataTable(
+        {
+            el: 'expensesTable',
+            serverSide: false,
+            ajax: {
+                read: '/ledger/GetExpensesByReportedDate?date=' + date,
+                add: '/ledger/addExpense',
+                update: '/ledger/updateExpense',
+                delete: '/ledger/removeExpense'
+            },
+            order: [[1, "desc"]],
+            columns: [
+                { data: 'id', title: 'Id', visible: false, edit: 'readonly', create: 'hidden', edit:'hidden' },
+                { data: 'expense_date', title: 'Expense Date', dType: 'datetime', create: 'false', edit:'false' },
+                { data: 'expense_category_id', title: 'Category', list: '/ledger/AllExpensesCategories' },
+                { data: 'expense_category_type', title: 'Type', list: '/ledger/AllExpensesCategoriesTypes', edit: 'false', create: 'false' },
+                { data: 'payment_type', title: 'Payment', list: [{ id: 0, name: "Other" }, { id: 1, name: "Cash" }, { id: 2, name: "Credit" }, { id: 3, name: "Bank" }] },
+                { data: 'report_date', title: 'Report Date', visible: false, create: 'hidden', edit: 'false', newRowVal: moment(new Date(date.split('/')[2], parseInt(date.split('/')[1]) - 1)).format('DD/MM/YYYY') },
+                { data: 'expense_val', title: 'Amount', dType: 'currency' },
+                { data: 'comment', title: 'Note' }
+            ]
+        });
+</script>

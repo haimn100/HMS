@@ -1,0 +1,107 @@
+﻿body{
+    background-color:inherit !important;
+}
+
+/* from bootstrap.css */
+.table-responsive {
+    overflow-x: hidden;
+}
+
+.alertify-logs {
+    z-index: 100;
+}
+
+.sidebar{
+    width: 220px;
+}
+
+section.content {
+    margin: 65px 15px 0 15px;
+    position:relative;
+}
+
+#ui-datepicker-div{
+    z-index: 2000 !important;
+}
+
+
+.fc-day-grid-event.fc-h-event.fc-event.fc-start.fc-end {
+    background-color: transparent;
+    color: #000;
+    border: 0 none;
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+form .select2-selection.select2-selection--single{
+    border:0 none !important;
+}
+
+.dataTables_wrapper .dataTables_processing {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    width: 30%;
+    height: 40px;
+    margin-left: -20%;
+    margin-top: -25px;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 1.2em;
+    background: none;
+}
+
+
+.row_warning, .dataTable tr.row_warning.selected, .dataTable.no-select tr.row_warning.selected {
+    background-color: orange !important;
+    color: #fff !important;
+}
+
+.dropdown-menu{
+    margin-top:0 !important;
+}
+
+.navbar{
+    min-height:unset !important;
+}
+
+#bootNav .nav-pills > li > a {
+    border-radius: 0 !important;
+}
+
+#bootNav .nav > li > a:hover {
+    background-color: #337ab7 !important;
+}
+
+#bootNav .nav-item > a {
+    display: inline-flex;
+    flex-wrap: wrap;   
+    align-items: center;
+    padding: 10px;
+}
+
+#bootNav li > a > *{
+    margin-right: 5px;
+}
+
+    #bootNav li > a > i {
+        font-size: 15px;
+        color: #fdff79;
+    }
+
+#bootNav ul.nav {
+    display: flex;
+    align-items: center;
+}
+
+@media screen and (max-width: 700px) {
+    #bootNav ul.nav {
+        flex-direction:column;
+    }
+}
+
+
+#bootNav .nav > .nav-item:last-child{
+    margin-left:auto;
+}

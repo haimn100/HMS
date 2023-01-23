@@ -1,0 +1,156 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<style>
+
+    .status-W {
+        background-color: salmon;
+        color: #fff;
+        padding: 5px;
+    }
+
+    .status-CO {
+        background-color: aquamarine;
+        color: #fff;
+        padding: 5px;
+    }
+
+    .status-CI {
+        background-color: green;
+        color: #fff;
+        padding: 5px;
+    }
+</style>
+
+<div class="container-fluid report-screen">
+    <div class="reports-title">
+        <h1>Reservations</h1>
+        <div class="menu">
+            <a id="goToCalendar" href="/reservation/calendar:@Request.Url.Query">Calendar</a>            
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="body">
+                    <div class="table-responsive">
+                        <table id="dTable" class="table no-select table-bordered"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let dateFormat = "DD/MM/YYYY";
+
+    $("#goToCalendar").click(function (ev) {
+        let from = $("input[data-filter-param='from'").val();
+        let to = $("input[data-filter-param='to'").val();
+        $(this).attr('href', `/reservation/calendar?from=${from}&to=${to}`);
+        return true;
+    });
+
+    window.addEventListener('AppTable.Modal.Input.Change', function (ev) {
+        let { target, val, name, type, form } = ev.detail;
+        if (name === 'res_date' || name === 'res_date_end') {
+            let moment_sDate = moment(form['res_date'], dateFormat);
+            let moment_eDate = moment(form['res_date_end'], dateFormat);
+
+            let isSameDate = moment_sDate.isSame(moment_eDate, dateFormat);
+            let isInvalid = moment_sDate.isAfter(moment_eDate, dateFormat);
+            let diffInDays = (isSameDate || isInvalid) ? 1 : moment_eDate.diff(moment_sDate, 'days');
+
+            if (isInvalid || isSameDate) {
+                target.dispatchEvent(new CustomEvent('AppTable.Modal.Input.Change.Mutate', {
+                    bubbles: true,
+                    detail: {
+                        type: 'date',
+                        name: 'res_date_end',
+                        val: moment_sDate.add(1, 'days').format(dateFormat)
+                    }
+                }));
+            }
+            target.dispatchEvent(new CustomEvent('AppTable.Modal.Input.Change.Mutate', {
+                bubbles: true,
+                detail: {
+                    type: 'number',
+                    name: 'nights',
+                    val: diffInDays
+                }
+            }));
+        }
+    });
+
+    new _globalCreateDataTable(
+        {
+            el: 'dTable',
+            ajax: {
+                read: '/reservation/allitemstable',
+                update: '/reservation/edit',
+                add: '/reservation/add',
+                delete: '/reservation/remove'
+            },
+            editFormButtons: [
+                {
+                    name: 'sendemail',
+                    title: 'Send Confirmation Email',
+                    onClick: function (row, srv) {
+                        if (confirm("Are you sure?")) {
+                            var id = row['res_id'];
+                            $.get("/reservation/sendconfirmation?resID=" + id).done(function () {
+                                alert("Email Sent");
+                            }).fail(function () { alert("There was a problem sending the mail, please contact your administrator"); })
+                        }
+                        return false;
+                    }
+                }
+            ],
+            order: [[1, "desc"]],
+            pageLength: 20,
+            columns: [
+                { data: 'id', title: 'Id', visible: false, edit: 'hidden', create: 'hidden' },
+                { data: 'res_id', title: 'Res.ID', visible: false, edit: 'readonly', create: 'hidden' },
+
+                { data: 'res_date', title: 'Arrive', dType: 'date', width: '50px' },
+                { data: 'res_date_end', title: 'Depart', dType: 'date', width: '50px', newRowVal: moment().add(1, 'days').format('DD/MM/YYYY') },
+                { data: 'nights', title: 'Nights', type: 'number', width: '20px', edit: 'readonly', create: 'readonly', newRowVal: 1 },
+
+                { data: 'res_name', title: 'Name', width: '15%' },
+                { data: 'res_email', title: 'Email'},
+                {
+                    data: 'sex', title: 'Gender', visible: false,
+                    list: [{ id: true, name: 'Male' }, { id: false, name: 'Female' }]
+                },
+                { data: 'number_of_people', title: 'Guests', type: 'number', width: '20px' },
+                { data: 'room_id', title: 'Room', width: '70px', list: '/room/GetRoomsSelectList' },
+                { data: 'origin', title: 'Travel Agent' },
+
+                { data: 'comment', title: 'Note' },
+                {
+                    data: 'status', title: 'Status', width: '30px', list: [
+                        { id: 1, name: 'W', html: `<div class='status-{name}'>{name}</div>` },
+                        { id: 2, name: 'CI', html: `<div class='status-{name}'>{name}</div>` },
+                        { id: 3, name: 'CO', html: `<div class='status-{name}'>{name}</div>` }]
+                },
+
+                { data: 'employee_name', title: 'Employee', visible: false, list: { url: '/staff/all', idField: 'name' } },
+                { data: 'allow_mix_dorm', title: 'Mix Dorm', type: 'bool', visible: false },
+            ],
+            filters: [
+                {
+                    title: 'From',
+                    type: 'date',
+                    param: 'from',
+                    val: moment().add(-1, 'days').format(dateFormat)
+                },
+                {
+                    title: 'To',
+                    type: 'date',
+                    param: 'to',
+                    val: moment().add(14, 'days').format(dateFormat)
+                }
+            ]
+        });
+</script>
