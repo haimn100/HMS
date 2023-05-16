@@ -1,7 +1,3 @@
-Sure, here's a simple example of a README file for your project. You can modify and expand it according to your needs:
-
----
-
 # Hotel Management System
 
 This project is a comprehensive Hotel Management System built with ASP.NET MVC and AngularJS. It is designed to streamline the operations of a hotel by automating various functions such as reservation management, cash handling, restaurant operations, housekeeping, and inventory management. It also includes a robust reporting system providing detailed insights into the hotel operations.
